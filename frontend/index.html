@@ -598,6 +598,15 @@ tr:hover td{background:var(--bg2);}
   justify-content:center;opacity:0;transition:opacity .2s;font-size:20px;
 }
 .avatar-upload:hover .avatar-overlay{opacity:1;}
+
+/* ── Timeframe Toggle Buttons ── */
+.tf-btn,.tf-btn-r{
+  padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:.05em;
+  border-radius:4px;border:1px solid var(--br);background:var(--bg2);
+  color:var(--tx3);cursor:pointer;transition:all .15s;
+}
+.tf-btn:hover,.tf-btn-r:hover{border-color:var(--ac);color:var(--ac);}
+.tf-active,.tf-r-active{background:var(--ac)!important;color:#000!important;border-color:var(--ac)!important;}
 </style>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
@@ -831,12 +840,35 @@ tr:hover td{background:var(--bg2);}
         </div>
         <div class="g2">
           <div class="card" style="cursor:default;">
-            <div class="card-hd" style="margin-bottom:8px;">CANDLESTICK CHART</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div class="card-hd">CANDLESTICK CHART</div>
+              <div id="tf-active-sym" style="font-size:10px;color:var(--ac);font-weight:700;letter-spacing:.05em;">RELIANCE</div>
+            </div>
             <div id="candle-wrap" style="height:195px;background:var(--bg);border-radius:6px;overflow:hidden;"></div>
+            <!-- TIMEFRAME TOGGLE -->
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+              <span style="font-size:9px;color:var(--tx3);align-self:center;letter-spacing:.07em;">TIMEFRAME</span>
+              <button onclick="setTF('1d')"  id="tf-1d"  class="tf-btn tf-active">1D</button>
+              <button onclick="setTF('1wk')" id="tf-1wk" class="tf-btn">1W</button>
+              <button onclick="setTF('1mo')" id="tf-1mo" class="tf-btn">1M</button>
+              <button onclick="setTF('3mo')" id="tf-3mo" class="tf-btn">3M</button>
+              <button onclick="setTF('1y')"  id="tf-1y"  class="tf-btn">1Y</button>
+              <button onclick="setTF('5y')"  id="tf-5y"  class="tf-btn">5Y</button>
+            </div>
           </div>
           <div>
             <div class="card" style="cursor:default;margin-bottom:10px;"><div class="card-hd" style="margin-bottom:6px;">RSI (14)</div><div style="height:78px;position:relative;"><canvas id="c-rsi"></canvas></div></div>
             <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:6px;">MACD</div><div style="height:78px;position:relative;"><canvas id="c-macd"></canvas></div></div>
+            <!-- TIMEFRAME TOGGLE MIRROR (RSI/MACD side) -->
+            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+              <span style="font-size:9px;color:var(--tx3);align-self:center;letter-spacing:.07em;">TIMEFRAME</span>
+              <button onclick="setTF('1d')"  class="tf-btn-r tf-r-active" id="tfr-1d">1D</button>
+              <button onclick="setTF('1wk')" class="tf-btn-r" id="tfr-1wk">1W</button>
+              <button onclick="setTF('1mo')" class="tf-btn-r" id="tfr-1mo">1M</button>
+              <button onclick="setTF('3mo')" class="tf-btn-r" id="tfr-3mo">3M</button>
+              <button onclick="setTF('1y')"  class="tf-btn-r" id="tfr-1y">1Y</button>
+              <button onclick="setTF('5y')"  class="tf-btn-r" id="tfr-5y">5Y</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1831,8 +1863,29 @@ function renderMktTable(){
     </tr>`).join('');
 }
 
+/* ── Timeframe state ── */
+let _tfSym='RELIANCE', _tfPeriod='1d';
+const TF_PERIOD_MAP={'1d':'5d','1wk':'1mo','1mo':'3mo','3mo':'6mo','1y':'1y','5y':'5y'};
+
+function setTF(tf){
+  _tfPeriod=tf;
+  ['1d','1wk','1mo','3mo','1y','5y'].forEach(t=>{
+    const b=document.getElementById('tf-'+t);
+    if(b) b.classList.toggle('tf-active',t===tf);
+    const r=document.getElementById('tfr-'+t);
+    if(r) r.classList.toggle('tf-r-active',t===tf);
+  });
+  drawCandle(_tfSym);
+  drawRSI();
+  drawMACD();
+}
+
 async function drawCandle(sym){
-  const data = await apiFetch(`/market/candles/${sym}?period=3mo`);
+  _tfSym=sym;
+  const el=document.getElementById('tf-active-sym');
+  if(el) el.textContent=sym;
+  const period=TF_PERIOD_MAP[_tfPeriod]||'3mo';
+  const data = await apiFetch(`/market/candles/${sym}?period=${period}`);
   const rows = data || _generateFallbackCandles(sym);
   dc('c-candle');
   const ctx=document.getElementById('c-candle');
@@ -1849,7 +1902,7 @@ async function drawCandle(sym){
       tension:.3,pointRadius:0,fill:true,borderWidth:2
     }]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`₹${Number(i.raw).toLocaleString()}`}}},
       scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},grid:{color:'#0d1520'}},
               y:{ticks:{color:'#475569',font:{size:8}},grid:{color:'#1a2332'}}}}
   });
