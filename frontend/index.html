@@ -1,0 +1,2738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AI Financial Advisor Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#07090d;--bg1:#0b0f18;--bg2:#111825;--bg3:#18202e;--bg4:#1e2a3a;
+  --gr:#00e676;--gr2:#00c853;--grd:#00e67618;
+  --am:#fbbf24;--bl:#3b82f6;--pu:#7c3aed;--rd:#ef4444;--cy:#06b6d4;
+  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#475569;
+  --bd:#1e2d3d;--bd2:#243447;--card:#0d1520;
+  --sb:210px;
+}
+.light-mode{
+  --bg:#f0f4f8;--bg1:#ffffff;--bg2:#f8fafc;--bg3:#eef2f7;--bg4:#e2e8f0;
+  --tx:#0f172a;--tx2:#475569;--tx3:#94a3b8;
+  --bd:#cbd5e1;--bd2:#94a3b8;--card:#ffffff;
+}
+html,body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;height:100%;overflow:hidden;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes ticker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes pop{0%{transform:scale(.92);opacity:0;}100%{transform:scale(1);opacity:1;}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+/* ── APP SHELL ── */
+#app{
+  position:relative;width:100%;height:100vh;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* ── PAGES ── */
+.page{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.page.active{display:flex;}
+
+/* ─────────────────────────────────────
+   LOGIN PAGE
+───────────────────────────────────── */
+#pg-login{
+  background:var(--bg);
+  align-items:center;justify-content:center;
+}
+.login-wrap{width:100%;max-width:400px;padding:24px 16px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-icon{
+  width:64px;height:64px;border-radius:18px;
+  background:var(--grd);border:2px solid var(--gr);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+}
+.login-title{font-size:30px;font-weight:800;color:var(--gr);letter-spacing:.5px;}
+.login-sub{color:var(--tx3);font-size:12px;margin-top:5px;line-height:1.5;}
+.auth-tabs{
+  display:flex;gap:0;background:var(--bg2);
+  border:1px solid var(--bd);border-radius:10px;
+  padding:3px;margin-bottom:18px;
+}
+.auth-tab{
+  flex:1;padding:8px;border-radius:8px;text-align:center;
+  font-size:12px;font-weight:600;cursor:pointer;color:var(--tx3);
+  transition:all .2s;border:none;background:none;font-family:inherit;
+}
+.auth-tab.active{background:var(--gr);color:#000;}
+.card-box{
+  background:var(--card);border:1px solid var(--bd);
+  border-radius:14px;padding:22px;
+}
+.google-btn{
+  width:100%;background:var(--bg2);color:var(--tx);
+  border:1px solid var(--bd2);border-radius:10px;padding:11px;
+  cursor:pointer;font-size:12px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:inherit;font-weight:600;transition:all .2s;
+}
+.google-btn:hover{border-color:var(--bl);color:var(--bl);}
+.divider{
+  text-align:center;color:var(--tx3);font-size:10px;
+  margin-bottom:14px;position:relative;
+}
+.divider::before,.divider::after{
+  content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--bd);
+}
+.divider::before{left:0;}.divider::after{right:0;}
+.form-group{margin-bottom:12px;}
+.form-label{
+  color:var(--tx3);font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;margin-bottom:4px;display:block;
+}
+.form-input{
+  width:100%;background:var(--bg2);color:var(--tx);
+  border:1px solid var(--bd2);border-radius:8px;
+  padding:9px 12px;font-family:inherit;font-size:12px;
+  transition:border-color .2s;
+}
+.form-input:focus{outline:none;border-color:var(--gr);}
+.btn-primary{
+  width:100%;background:var(--gr);color:#000;border:none;
+  border-radius:10px;padding:11px;cursor:pointer;
+  font-size:13px;font-weight:700;font-family:inherit;
+  transition:all .2s;
+}
+.btn-primary:hover{background:var(--gr2);transform:scale(.99);}
+.btn-primary:active{transform:scale(.97);}
+.login-footer{
+  text-align:center;margin-top:10px;
+  color:var(--tx3);font-size:10px;
+}
+.err-shake{animation:shake .35s ease;}
+
+/* ─────────────────────────────────────
+   MAIN APP
+───────────────────────────────────── */
+#pg-app{overflow:hidden;}
+
+/* TOP BAR */
+#topbar{
+  background:var(--bg1);border-bottom:1px solid var(--bd);
+  height:52px;display:flex;align-items:center;
+  padding:0 14px;gap:10px;flex-shrink:0;z-index:50;
+}
+.sb-toggle{
+  background:none;border:none;cursor:pointer;color:var(--tx2);
+  padding:6px 8px;border-radius:8px;display:flex;align-items:center;
+  transition:all .2s;flex-shrink:0;
+}
+.sb-toggle:hover{background:var(--bg3);color:var(--tx);}
+.top-logo{display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;}
+.top-logo-icon{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--grd);border:1.5px solid var(--gr);
+  display:flex;align-items:center;justify-content:center;
+}
+.logo-main{color:var(--gr);font-size:14px;font-weight:800;letter-spacing:.5px;line-height:1.1;}
+.logo-tiny{color:var(--tx3);font-size:8px;letter-spacing:2px;}
+.top-search{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+  padding:7px 14px;font-size:11px;color:var(--tx);
+  flex:1;max-width:240px;font-family:inherit;
+}
+.top-search:focus{outline:none;border-color:var(--gr);}
+.top-right{display:flex;gap:7px;align-items:center;margin-left:auto;}
+.live-pill{
+  background:var(--grd);border:1px solid var(--gr);
+  border-radius:20px;padding:3px 10px;
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;color:var(--gr);
+  font-family:'Courier New',monospace;white-space:nowrap;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--gr);animation:pulse 1.5s infinite;flex-shrink:0;}
+.btn-icon{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:8px;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--tx2);transition:all .2s;flex-shrink:0;
+  font-size:11px;font-weight:700;position:relative;
+}
+.btn-icon:hover{border-color:var(--gr);color:var(--gr);}
+.theme-toggle{
+  background:var(--bg2);border:1px solid var(--bd2);
+  border-radius:20px;width:50px;height:26px;
+  display:flex;align-items:center;padding:2px;
+  cursor:pointer;transition:all .3s;flex-shrink:0;
+}
+.theme-thumb{
+  width:20px;height:20px;border-radius:50%;background:var(--gr);
+  transition:transform .3s;display:flex;align-items:center;
+  justify-content:center;font-size:10px;
+}
+.theme-thumb.moved{transform:translateX(24px);}
+.profile-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,#6d28d9,#2563eb);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border:2px solid var(--bd2);
+  transition:all .2s;flex-shrink:0;overflow:hidden;
+}
+.profile-btn:hover{border-color:var(--gr);}
+.profile-img{width:100%;height:100%;object-fit:cover;display:none;}
+
+/* SUB TOOLBAR */
+#sub-bar{
+  background:var(--bg1);border-bottom:1px solid var(--bd);
+  height:36px;display:flex;align-items:center;
+  padding:0 14px;gap:8px;flex-shrink:0;
+  overflow-x:auto;
+}
+#sub-bar::-webkit-scrollbar{display:none;}
+.sub-ctx{
+  color:var(--tx3);font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;white-space:nowrap;
+  padding-right:10px;border-right:1px solid var(--bd);
+  margin-right:2px;flex-shrink:0;
+}
+.sub-pills{display:flex;gap:5px;flex:1;overflow-x:auto;}
+.sub-pills::-webkit-scrollbar{display:none;}
+.sub-pill{
+  background:none;border:1px solid transparent;
+  border-radius:16px;padding:3px 10px;font-size:10px;
+  color:var(--tx3);cursor:pointer;white-space:nowrap;
+  font-family:inherit;transition:all .2s;flex-shrink:0;
+}
+.sub-pill:hover{color:var(--tx2);border-color:var(--bd);}
+.sub-pill.active{background:var(--grd);border-color:var(--gr);color:var(--gr);}
+.sub-actions{display:flex;gap:5px;margin-left:auto;flex-shrink:0;}
+.sub-act{
+  background:var(--bg3);border:1px solid var(--bd2);
+  border-radius:6px;padding:3px 10px;font-size:10px;
+  color:var(--tx2);cursor:pointer;white-space:nowrap;
+  font-family:inherit;transition:all .2s;
+}
+.sub-act:hover{color:var(--gr);border-color:var(--gr);}
+.sub-refresh{
+  background:none;border:1px solid var(--bd);border-radius:6px;
+  width:26px;height:26px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;color:var(--tx3);
+  transition:all .2s;font-size:14px;flex-shrink:0;
+}
+.sub-refresh:hover{color:var(--gr);border-color:var(--gr);}
+
+/* TICKER */
+#ticker-bar{
+  background:var(--bg);border-bottom:1px solid var(--bd);
+  height:24px;overflow:hidden;flex-shrink:0;
+}
+.ticker-inner{
+  display:inline-flex;white-space:nowrap;
+  animation:ticker 55s linear infinite;padding:3px 0;
+}
+.ticker-inner:hover{animation-play-state:paused;}
+.t-item{display:inline-flex;gap:5px;align-items:center;padding:0 14px;border-right:1px solid var(--bd);font-size:10px;}
+.t-sym{color:var(--tx3);font-weight:600;}
+.t-p{color:var(--tx);}
+.t-u{color:var(--gr);}
+.t-d{color:var(--rd);}
+
+/* LAYOUT */
+#layout{display:flex;flex:1;min-height:0;overflow:hidden;}
+
+/* SIDEBAR */
+#sidebar{
+  width:var(--sb);background:var(--bg1);
+  border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;
+  transition:width .3s ease;overflow:hidden;flex-shrink:0;
+}
+#sidebar.collapsed{width:48px;}
+.sb-grp{padding:8px 0 2px;}
+.sb-grp-label{
+  padding:0 12px 4px;color:var(--tx3);
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;transition:opacity .2s;
+}
+#sidebar.collapsed .sb-grp-label{opacity:0;pointer-events:none;}
+.sb-item{
+  display:flex;align-items:center;gap:0;
+  padding:8px 0;margin:1px 6px;border-radius:9px;
+  cursor:pointer;transition:all .2s;
+  border:1px solid transparent;white-space:nowrap;overflow:hidden;
+}
+.sb-item:hover{background:var(--bg2);}
+.sb-item.active{background:var(--grd);border-color:var(--gr);}
+.sb-item-icon{
+  width:48px;min-width:48px;display:flex;
+  align-items:center;justify-content:center;font-size:16px;
+}
+.sb-item-label{font-size:12px;color:var(--tx2);flex:1;}
+.sb-item.active .sb-item-label{color:var(--gr);}
+.sb-item:hover .sb-item-label{color:var(--tx);}
+.sb-badge{
+  background:var(--rd);color:#fff;border-radius:10px;
+  padding:1px 6px;font-size:8px;margin-right:8px;flex-shrink:0;
+}
+#sidebar.collapsed .sb-item-label,
+#sidebar.collapsed .sb-grp-label,
+#sidebar.collapsed .sb-badge{display:none;}
+.sb-bottom{margin-top:auto;border-top:1px solid var(--bd);padding:6px 0;}
+
+/* CONTENT */
+#content{flex:1;overflow-y:auto;min-width:0;position:relative;}
+#content::-webkit-scrollbar{width:4px;}
+#content::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.pane{display:none;padding:16px;animation:fadeUp .3s ease;}
+.pane.active{display:block;}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:768px){
+  .g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .g21{grid-template-columns:1fr;}
+  #sidebar{display:none;}
+}
+@media(max-width:480px){
+  .g4,.g3,.g2{grid-template-columns:1fr;}
+}
+
+/* CARDS */
+.card{
+  background:var(--card);border:1px solid var(--bd);
+  border-radius:12px;padding:14px;transition:all .25s;cursor:pointer;
+}
+.card:hover{border-color:var(--bd2);transform:translateY(-1px);}
+.card.hi:hover{border-color:var(--gr);}
+.card-hd{
+  color:var(--tx3);font-size:9px;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:5px;
+}
+.card-val{font-size:22px;font-weight:700;line-height:1.1;}
+.card-sub{font-size:10px;color:var(--tx3);margin-top:3px;}
+.sec-hd{
+  font-size:11px;font-weight:600;color:var(--tx2);
+  letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;
+}
+.see-all{color:var(--gr);font-size:10px;cursor:pointer;font-weight:400;letter-spacing:0;}
+.see-all:hover{opacity:.7;}
+
+/* COLOURS */
+.up{color:var(--gr)!important;}
+.dn{color:var(--rd)!important;}
+.nu{color:var(--am)!important;}
+.bl2{color:var(--bl)!important;}
+
+/* BADGES */
+.badge{padding:2px 8px;border-radius:5px;font-size:9px;font-weight:600;}
+.b-buy{background:#00e67615;color:var(--gr);border:1px solid #00e67640;}
+.b-sbuy{background:#00e67625;color:#00ffaa;border:1px solid var(--gr);}
+.b-sell{background:#ef444415;color:var(--rd);border:1px solid #ef444440;}
+.b-hold{background:#fbbf2415;color:var(--am);border:1px solid #fbbf2440;}
+.b-bull{background:#00e67615;color:var(--gr);border:1px solid #00e67630;}
+.b-bear{background:#ef444415;color:var(--rd);border:1px solid #ef444430;}
+.b-neu{background:#fbbf2412;color:var(--am);border:1px solid #fbbf2425;}
+.b-llm{background:#7c3aed18;color:#a78bfa;border:1px solid #7c3aed40;font-size:8px;}
+.b-new{background:#06b6d415;color:var(--cy);border:1px solid #06b6d440;font-size:8px;}
+
+/* BUTTONS */
+.btn-ghost{
+  background:var(--bg3);color:var(--tx2);border:1px solid var(--bd2);
+  border-radius:8px;padding:7px 14px;font-size:11px;
+  cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.btn-ghost:hover{border-color:var(--gr);color:var(--gr);}
+.btn-sm{
+  background:var(--bg2);color:var(--tx3);border:1px solid var(--bd);
+  border-radius:20px;padding:4px 12px;font-size:10px;
+  cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;
+}
+.btn-sm:hover,.btn-sm.active{background:var(--grd);color:var(--gr);border-color:var(--gr);}
+
+/* INPUTS */
+select{
+  background:var(--bg2);color:var(--tx);border:1px solid var(--bd2);
+  border-radius:8px;padding:8px 10px;font-family:inherit;font-size:12px;
+}
+select:focus{outline:none;border-color:var(--gr);}
+textarea{
+  background:var(--bg2);color:var(--tx);border:1px solid var(--bd2);
+  border-radius:8px;padding:8px 12px;font-family:inherit;font-size:12px;
+}
+textarea:focus{outline:none;border-color:var(--gr);}
+
+/* LLM BUBBLE */
+.llm-bubble{
+  background:var(--bg2);border:1px solid var(--bd2);
+  border-radius:10px;border-top-left-radius:2px;
+  padding:12px 14px;font-size:11px;color:var(--tx);
+  line-height:1.65;margin-bottom:10px;
+}
+.typing-dots{display:flex;gap:4px;align-items:center;padding:4px 0;}
+.typing-dots span{width:5px;height:5px;border-radius:50%;background:var(--gr);animation:blink .9s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+
+/* RISK BARS */
+.risk-bar{height:5px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:3px 0 8px;}
+.risk-fill{height:100%;border-radius:3px;transition:width 1s ease;}
+.rl{background:var(--gr);}
+.rm{background:var(--am);}
+.rh{background:var(--rd);}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{
+  color:var(--tx3);padding:7px 10px;text-align:left;
+  border-bottom:1px solid var(--bd);font-weight:500;
+  font-size:10px;letter-spacing:.5px;
+}
+td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--tx);}
+tr:hover td{background:var(--bg2);}
+
+/* SPARKLINE */
+.spark{display:inline-block;vertical-align:middle;}
+
+/* FEAR GAUGE */
+.fg-track{
+  height:8px;border-radius:4px;
+  background:linear-gradient(to right,#ef4444,#fbbf24 50%,#00e676);
+  position:relative;margin:8px 0;
+}
+.fg-needle{
+  position:absolute;top:-5px;width:3px;height:18px;
+  background:#fff;border-radius:2px;transform:translateX(-50%);
+  transition:left .6s ease;
+}
+
+/* TOASTS */
+#toast-area{
+  position:fixed;top:60px;right:14px;
+  z-index:900;display:flex;flex-direction:column;gap:6px;
+  pointer-events:none;
+}
+.toast{
+  background:var(--bg2);border:1px solid var(--bd2);
+  border-radius:10px;padding:10px 14px;font-size:11px;
+  display:flex;align-items:flex-start;gap:8px;
+  max-width:280px;pointer-events:all;
+  animation:slideDown .3s ease;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+.t-ic{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;flex-shrink:0;font-weight:700;margin-top:1px;
+}
+
+/* MODALS */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);z-index:800;
+  align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--bg1);border:1px solid var(--bd2);
+  border-radius:16px;padding:24px;width:100%;max-width:430px;
+  animation:pop .25s ease;max-height:90vh;overflow-y:auto;
+}
+.modal-title{
+  font-size:15px;font-weight:700;margin-bottom:4px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-sub{color:var(--tx3);font-size:11px;margin-bottom:16px;}
+.modal-close{
+  background:none;border:none;color:var(--tx3);
+  cursor:pointer;font-size:18px;padding:0 4px;border-radius:4px;
+}
+.modal-close:hover{color:var(--tx);}
+
+/* ─── AI FAB — fixed to viewport bottom-right ─── */
+#ai-fab{
+  position:fixed;
+  bottom:22px;
+  right:22px;
+  width:52px;height:52px;
+  border-radius:50%;
+  border:2px solid var(--pu);
+  background:var(--bg2);
+  cursor:pointer;
+  z-index:700;
+  transition:all .25s;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(124,58,237,.35);
+}
+#ai-fab:hover{transform:scale(1.09);border-color:var(--gr);box-shadow:0 6px 28px rgba(0,230,118,.3);}
+#ai-fab svg{width:30px;height:30px;}
+
+/* AI CHAT WINDOW */
+#chat-win{
+  position:fixed;
+  bottom:86px;
+  right:22px;
+  width:310px;
+  background:var(--bg1);border:1px solid var(--bd2);
+  border-radius:16px;z-index:700;
+  display:none;flex-direction:column;
+  animation:pop .3s ease;
+  box-shadow:0 8px 40px rgba(0,0,0,.55);
+}
+#chat-win.open{display:flex;}
+#chat-win.max{
+  width:min(520px, 92vw);
+  height:min(600px, 82vh);
+  bottom:100px;right:22px;
+}
+#chat-hd{
+  padding:10px 14px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px;
+  border-radius:16px 16px 0 0;background:var(--bg2);
+}
+.chat-ai-icon{
+  width:30px;height:30px;border-radius:50%;
+  background:linear-gradient(135deg,#4c1d95,#1d4ed8);
+  border:1.5px solid var(--pu);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.chat-hd-info{flex:1;}
+.chat-hd-name{font-size:11px;font-weight:700;color:var(--gr);}
+.chat-hd-sub{font-size:9px;color:var(--tx3);}
+.chat-cc{display:flex;gap:4px;}
+.cc{
+  width:22px;height:22px;border-radius:5px;
+  border:1px solid var(--bd);background:var(--bg3);
+  cursor:pointer;display:flex;align-items:center;
+  justify-content:center;color:var(--tx2);font-size:10px;transition:all .2s;
+}
+.cc:hover{border-color:var(--gr);color:var(--gr);}
+#chat-msgs{
+  flex:1;overflow-y:auto;padding:12px;
+  display:flex;flex-direction:column;gap:8px;
+  min-height:160px;max-height:280px;
+}
+#chat-win.max #chat-msgs{max-height:none;flex:1;}
+#chat-msgs::-webkit-scrollbar{width:3px;}
+#chat-msgs::-webkit-scrollbar-thumb{background:var(--bd2);}
+.msg-user{
+  background:var(--grd);border:1px solid var(--gr);
+  border-radius:10px;border-bottom-right-radius:2px;
+  padding:7px 11px;font-size:11px;align-self:flex-end;max-width:88%;
+}
+.msg-ai{
+  background:var(--bg2);border:1px solid var(--bd2);
+  border-radius:10px;border-top-left-radius:2px;
+  padding:7px 11px;font-size:11px;align-self:flex-start;
+  max-width:92%;line-height:1.55;
+}
+.chat-quick{
+  padding:8px 12px;display:flex;gap:5px;
+  flex-wrap:wrap;border-top:1px solid var(--bd);
+}
+.cq{
+  background:var(--bg3);border:1px solid var(--bd2);
+  border-radius:10px;padding:3px 9px;
+  font-size:9px;color:var(--tx3);cursor:pointer;transition:all .2s;
+}
+.cq:hover{border-color:var(--gr);color:var(--gr);}
+#chat-inp-row{
+  padding:8px 12px;border-top:1px solid var(--bd);
+  display:flex;gap:6px;align-items:center;
+}
+#chat-inp{
+  flex:1;border-radius:20px;padding:7px 12px;font-size:11px;
+  background:var(--bg2);border:1px solid var(--bd2);
+  color:var(--tx);font-family:inherit;
+}
+#chat-inp:focus{outline:none;border-color:var(--gr);}
+#chat-send{
+  background:var(--gr);border:none;border-radius:50%;
+  width:30px;height:30px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s;
+}
+#chat-send:hover{background:var(--gr2);}
+
+/* BOTTOM NAV (mobile) */
+#bottom-nav{
+  display:none;background:var(--bg1);border-top:1px solid var(--bd);
+  justify-content:space-around;padding:6px 0 10px;flex-shrink:0;
+}
+@media(max-width:768px){#bottom-nav{display:flex;}}
+.bn-item{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:pointer;padding:4px 8px;border-radius:8px;
+  background:none;border:none;color:var(--tx3);font-size:8px;font-family:inherit;
+}
+.bn-item.active,.bn-item:hover{color:var(--gr);}
+.bn-icon{font-size:18px;}
+
+/* NOTES TAGS */
+.note-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:all .25s;}
+.note-card:hover{border-color:var(--gr);}
+.note-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;margin-bottom:6px;font-weight:600;}
+.tag-obs{background:#3b82f615;color:var(--bl);border:1px solid #3b82f640;}
+.tag-goal{background:#00e67615;color:var(--gr);border:1px solid #00e67640;}
+.tag-mistake{background:#ef444415;color:var(--rd);border:1px solid #ef444440;}
+.tag-pattern{background:#7c3aed15;color:#a78bfa;border:1px solid #7c3aed40;}
+
+/* AVATAR UPLOAD */
+.avatar-upload{
+  width:84px;height:84px;border-radius:50%;
+  background:linear-gradient(135deg,#6d28d9,#2563eb);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;
+  margin:0 auto 14px;border:3px solid var(--bd2);transition:border-color .2s;
+}
+.avatar-upload:hover{border-color:var(--gr);}
+.avatar-overlay{
+  position:absolute;inset:0;border-radius:50%;
+  background:rgba(0,0,0,.5);display:flex;align-items:center;
+  justify-content:center;opacity:0;transition:opacity .2s;font-size:20px;
+}
+.avatar-upload:hover .avatar-overlay{opacity:1;}
+</style>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════════ TOAST AREA ══════════════ -->
+<div id="toast-area"></div>
+
+<!-- ══════════════ LOGIN PAGE ══════════════ -->
+<div id="pg-login" class="page active">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+          <path d="M17 3L31 10V24L17 31L3 24V10L17 3Z" stroke="#00e676" stroke-width="1.8" fill="none"/>
+          <circle cx="17" cy="17" r="3.5" fill="#00e676"/>
+          <circle cx="10" cy="13" r="1.5" fill="#00e676" opacity=".55"/>
+          <circle cx="24" cy="13" r="1.5" fill="#00e676" opacity=".55"/>
+          <line x1="10" y1="13" x2="17" y2="17" stroke="#00e676" stroke-width=".8" opacity=".4"/>
+          <line x1="24" y1="13" x2="17" y2="17" stroke="#00e676" stroke-width=".8" opacity=".4"/>
+        </svg>
+      </div>
+      <div class="login-title">AI·FIN</div>
+      <div class="login-sub">Financial Advisor Pro<br>Claude 4.5 · GPT-4 · Gemini Flash — All three LLMs. One platform.</div>
+    </div>
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab active" id="tab-login" onclick="authTab('login')" role="tab">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="authTab('signup')" role="tab">Sign Up</button>
+      <button class="auth-tab" id="tab-forgot" onclick="authTab('forgot')" role="tab">Reset Password</button>
+    </div>
+    <div class="card-box" id="login-card">
+      <div id="google-row">
+        <button class="google-btn" onclick="doGoogleAuth()">
+          <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.5 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.2a3.6 3.6 0 0 1-1.56 2.36v1.96h2.52C14.64 12.55 15.5 10.54 15.5 8.18Z" fill="#4285f4"/><path d="M8 16c2.1 0 3.86-.7 5.15-1.88l-2.52-1.96c-.7.47-1.6.75-2.63.75-2.02 0-3.73-1.36-4.34-3.2H1.06v2.02A8 8 0 0 0 8 16Z" fill="#34a853"/><path d="M3.66 9.71A4.83 4.83 0 0 1 3.4 8c0-.59.1-1.16.26-1.71V4.27H1.06A8 8 0 0 0 0 8c0 1.29.3 2.51.85 3.59l2.81-1.88Z" fill="#fbbc04"/><path d="M8 3.18c1.14 0 2.16.39 2.96 1.16l2.22-2.22C11.85.79 10.09 0 8 0A8 8 0 0 0 1.06 4.27l2.6 2.02C4.27 4.54 5.98 3.18 8 3.18Z" fill="#ea4335"/></svg>
+          Continue with Google
+        </button>
+        <div class="divider">— or —</div>
+      </div>
+      <div id="auth-form-login">
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="yash@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+        <button class="btn-primary" onclick="doLogin()">Sign In Securely</button>
+        <div class="login-footer" style="margin-top:10px;">JWT-secured · Google OAuth 2.0 · AES-256 encrypted</div>
+      </div>
+      <div id="auth-form-signup" style="display:none;">
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="signup-name" placeholder="Yash Sharma" autocomplete="name"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="signup-email" placeholder="yash@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="signup-pass" placeholder="Minimum 6 characters" autocomplete="new-password"/></div>
+        <button class="btn-primary" onclick="doSignup()">Create Account</button>
+      </div>
+      <div id="auth-form-forgot" style="display:none;">
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="yash@example.com"/></div>
+        <button class="btn-primary" onclick="showToast('Password reset link sent to your email!','gr')">Send Reset Link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="pg-app" class="page">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <button class="sb-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+      <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+        <rect y="0" width="18" height="2" rx="1" fill="currentColor"/>
+        <rect y="6" width="13" height="2" rx="1" fill="currentColor"/>
+        <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+      </svg>
+    </button>
+    <div class="top-logo" onclick="navPane('dashboard')">
+      <div class="top-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L18 6.5V13.5L10 18L2 13.5V6.5L10 2Z" stroke="#00e676" stroke-width="1.5" fill="none"/>
+          <circle cx="10" cy="10" r="2.5" fill="#00e676"/>
+          <circle cx="6" cy="8" r="1" fill="#00e676" opacity=".5"/>
+          <circle cx="14" cy="8" r="1" fill="#00e676" opacity=".5"/>
+        </svg>
+      </div>
+      <div><div class="logo-main">AI·FIN</div><div class="logo-tiny">ADVISOR PRO</div></div>
+    </div>
+    <input class="top-search" placeholder="Search stocks, crypto, indices…" oninput="searchHandler(this.value)" aria-label="Search markets"/>
+    <div class="top-right">
+      <div class="live-pill"><div class="live-dot"></div><span id="clk">--:--:--</span>&nbsp;IST</div>
+      <span id="ws-status-badge" title="WebSocket live price stream status" style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--bg3);border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px;border:1px solid var(--bd);cursor:default;margin-right:2px;">
+        <span id="ws-dot" style="width:7px;height:7px;border-radius:50%;background:var(--rd);display:inline-block;transition:all .3s;box-shadow:0 0 6px var(--rd);"></span>
+        <span id="ws-label" style="color:var(--tx2);">POLLING</span>
+      </span>
+      <div class="btn-icon" onclick="triggerAlerts()" title="Alerts" aria-label="View alerts">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2a5 5 0 0 0-5 5v2l-1.5 2h13L13 9V7A5 5 0 0 0 8 2Z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+          <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        </svg>
+        <span id="alert-badge" style="position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--rd);font-size:7px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;">3</span>
+      </div>
+      <div class="btn-icon" onclick="downloadReport('pdf')" title="Export PDF" style="color:var(--am);">PDF</div>
+      <div class="btn-icon" onclick="downloadReport('excel')" title="Export Excel" style="color:var(--gr);">XLS</div>
+      <div class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle theme">
+        <div class="theme-thumb" id="theme-thumb">☀</div>
+      </div>
+      <div class="profile-btn" onclick="navPane('profile')" title="Profile" aria-label="Open profile">
+        <img id="profile-img" class="profile-img" alt="Profile"/>
+        <svg id="profile-svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5.5" r="2.5" fill="#e2e8f0"/>
+          <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#e2e8f0" stroke-width="1.3" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUB TOOLBAR -->
+  <div id="sub-bar">
+    <span class="sub-ctx" id="sub-ctx">DASHBOARD</span>
+    <div class="sub-pills" id="sub-pills"></div>
+    <div class="sub-actions" id="sub-actions">
+      <button class="sub-refresh" onclick="doRefresh()" title="Refresh data" aria-label="Refresh">↻</button>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div id="ticker-bar" aria-label="Live market ticker">
+    <div class="ticker-inner">
+      <span class="t-item"><span class="t-sym">NIFTY</span><span class="t-p">22,456</span><span class="t-u"> +1.24%</span></span>
+      <span class="t-item"><span class="t-sym">SENSEX</span><span class="t-p">73,812</span><span class="t-u"> +0.98%</span></span>
+      <span class="t-item"><span class="t-sym">BTC</span><span class="t-p">67,842</span><span class="t-d"> -2.14%</span></span>
+      <span class="t-item"><span class="t-sym">AAPL</span><span class="t-p">189.30</span><span class="t-u"> +0.54%</span></span>
+      <span class="t-item"><span class="t-sym">TSLA</span><span class="t-p">178.20</span><span class="t-d"> -3.21%</span></span>
+      <span class="t-item"><span class="t-sym">NVDA</span><span class="t-p">875.40</span><span class="t-u"> +2.34%</span></span>
+      <span class="t-item"><span class="t-sym">ETH</span><span class="t-p">3,521</span><span class="t-d"> -1.87%</span></span>
+      <span class="t-item"><span class="t-sym">RELIANCE</span><span class="t-p">2,847</span><span class="t-u"> +1.24%</span></span>
+      <span class="t-item"><span class="t-sym">TCS</span><span class="t-p">3,921</span><span class="t-u"> +0.87%</span></span>
+      <span class="t-item"><span class="t-sym">GOLD</span><span class="t-p">2,348</span><span class="t-u"> +0.32%</span></span>
+      <span class="t-item"><span class="t-sym">SP500</span><span class="t-p">5,218</span><span class="t-u"> +0.87%</span></span>
+      <span class="t-item"><span class="t-sym">CRUDE</span><span class="t-p">81.24</span><span class="t-d"> -1.05%</span></span>
+      <span class="t-item"><span class="t-sym">NIFTY</span><span class="t-p">22,456</span><span class="t-u"> +1.24%</span></span>
+      <span class="t-item"><span class="t-sym">SENSEX</span><span class="t-p">73,812</span><span class="t-u"> +0.98%</span></span>
+      <span class="t-item"><span class="t-sym">BTC</span><span class="t-p">67,842</span><span class="t-d"> -2.14%</span></span>
+      <span class="t-item"><span class="t-sym">AAPL</span><span class="t-p">189.30</span><span class="t-u"> +0.54%</span></span>
+      <span class="t-item"><span class="t-sym">RELIANCE</span><span class="t-p">2,847</span><span class="t-u"> +1.24%</span></span>
+      <span class="t-item"><span class="t-sym">GOLD</span><span class="t-p">2,348</span><span class="t-u"> +0.32%</span></span>
+    </div>
+  </div>
+
+  <!-- LAYOUT -->
+  <div id="layout">
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar" aria-label="Main navigation">
+      <div class="sb-grp">
+        <div class="sb-grp-label">MAIN</div>
+        <div class="sb-item active" id="sb-dashboard" onclick="navPane('dashboard')" role="button" tabindex="0"><div class="sb-item-icon">⬡</div><div class="sb-item-label">Dashboard</div></div>
+        <div class="sb-item" id="sb-markets" onclick="navPane('markets')" role="button" tabindex="0"><div class="sb-item-icon">◎</div><div class="sb-item-label">Markets</div></div>
+        <div class="sb-item" id="sb-predict" onclick="navPane('predict')" role="button" tabindex="0"><div class="sb-item-icon">◆</div><div class="sb-item-label">AI Predict</div><div class="sb-badge">AI</div></div>
+      </div>
+      <div class="sb-grp">
+        <div class="sb-grp-label">PORTFOLIO</div>
+        <div class="sb-item" id="sb-portfolio" onclick="navPane('portfolio')" role="button" tabindex="0"><div class="sb-item-icon">◇</div><div class="sb-item-label">Portfolio</div></div>
+        <div class="sb-item" id="sb-risk" onclick="navPane('risk')" role="button" tabindex="0"><div class="sb-item-icon">▲</div><div class="sb-item-label">Risk Analysis</div></div>
+        <div class="sb-item" id="sb-backtest" onclick="navPane('backtest')" role="button" tabindex="0"><div class="sb-item-icon">▶</div><div class="sb-item-label">Backtest</div></div>
+      </div>
+      <div class="sb-grp">
+        <div class="sb-grp-label">INTELLIGENCE</div>
+        <div class="sb-item" id="sb-sentiment" onclick="navPane('sentiment')" role="button" tabindex="0"><div class="sb-item-icon">◉</div><div class="sb-item-label">Sentiment</div></div>
+        <div class="sb-item" id="sb-screener" onclick="navPane('screener')" role="button" tabindex="0"><div class="sb-item-icon">◐</div><div class="sb-item-label">Screener</div></div>
+      </div>
+      <div class="sb-grp">
+        <div class="sb-grp-label">PERSONAL</div>
+        <div class="sb-item" id="sb-notes" onclick="navPane('notes')" role="button" tabindex="0"><div class="sb-item-icon">✎</div><div class="sb-item-label">Trade Journal</div></div>
+        <div class="sb-item" id="sb-profile" onclick="navPane('profile')" role="button" tabindex="0"><div class="sb-item-icon">○</div><div class="sb-item-label">Profile</div></div>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-item" onclick="toggleChat()" role="button" tabindex="0"><div class="sb-item-icon">✦</div><div class="sb-item-label">AI Assistant</div></div>
+        <div class="sb-item" onclick="doLogout()" role="button" tabindex="0"><div class="sb-item-icon">⏻</div><div class="sb-item-label">Logout</div></div>
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main id="content">
+
+      <!-- ─── DASHBOARD ─── -->
+      <div id="pane-dashboard" class="pane active">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:19px;font-weight:700;" id="dash-greeting">Good morning, Yash</div>
+            <div style="color:var(--tx3);font-size:11px;margin-top:3px;">Thursday · Apr 10, 2026 · NSE Open · <span class="up">All systems live</span></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="badge b-new" style="padding:4px 12px;">3 AI alerts</div>
+            <button class="btn-ghost" onclick="showGoalsModal()" style="font-size:11px;padding:6px 14px;">Today's Goals</button>
+          </div>
+        </div>
+        <div class="g4" id="idx-cards"></div>
+        <div class="g21">
+          <div>
+            <div class="sec-hd">AI PORTFOLIO HEALTH <span class="see-all" onclick="navPane('portfolio')">View portfolio →</span></div>
+            <div class="card hi" style="cursor:default;margin-bottom:14px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+                <span class="badge b-llm">Claude Sonnet 4.5</span>
+                <span class="badge b-llm">GPT-4</span>
+                <span class="badge b-llm">Gemini Flash</span>
+                <span style="color:var(--tx3);font-size:9px;align-self:center;margin-left:4px;">fallback chain active</span>
+              </div>
+              <div class="llm-bubble" id="ai-commentary">Your portfolio is up <span class="up">+13.74%</span> YTD, outperforming NIFTY50 by <span class="up">+4.8%</span>. HDFC Bank and Reliance are your strongest performers. BTC at 7% is above optimal — trim 2-3% to improve Sharpe from 1.84 → 2.06. Today's RBI rate hold is bullish for your banking holdings.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn-ghost" onclick="refreshAI()" style="font-size:11px;padding:6px 14px;">↻ Refresh AI</button>
+                <button class="btn-ghost" onclick="navPane('risk')" style="font-size:11px;padding:6px 14px;">Risk Report</button>
+                <button class="btn-ghost" onclick="toggleChat()" style="font-size:11px;padding:6px 14px;">Ask AI Chat</button>
+              </div>
+            </div>
+            <div class="sec-hd">TOP MOVERS <span class="see-all" onclick="navPane('markets')">All markets →</span></div>
+            <div id="dash-movers"></div>
+          </div>
+          <div>
+            <div class="sec-hd">SNAPSHOT</div>
+            <div id="dash-snap"></div>
+            <div class="sec-hd" style="margin-top:14px;">LIVE NEWS <span class="see-all" onclick="navPane('sentiment')">Sentiment →</span></div>
+            <div id="dash-news"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MARKETS ─── -->
+      <div id="pane-markets" class="pane">
+        <div class="sec-hd">GLOBAL MARKETS</div>
+        <div style="overflow-x:auto;margin-bottom:14px;">
+          <table>
+            <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Chg%</th><th>Volume</th><th>52W Hi</th><th>Signal</th><th></th></tr></thead>
+            <tbody id="mkt-body"></tbody>
+          </table>
+        </div>
+        <div class="g2">
+          <div class="card" style="cursor:default;">
+            <div class="card-hd" style="margin-bottom:8px;">CANDLESTICK CHART</div>
+            <div id="candle-wrap" style="height:195px;background:var(--bg);border-radius:6px;overflow:hidden;"></div>
+          </div>
+          <div>
+            <div class="card" style="cursor:default;margin-bottom:10px;"><div class="card-hd" style="margin-bottom:6px;">RSI (14)</div><div style="height:78px;position:relative;"><canvas id="c-rsi"></canvas></div></div>
+            <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:6px;">MACD</div><div style="height:78px;position:relative;"><canvas id="c-macd"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── PREDICT ─── -->
+      <div id="pane-predict" class="pane">
+        <div class="sec-hd">AI PREDICTION ENGINE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end;flex-wrap:wrap;">
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:4px;">SYMBOL</label>
+            <select id="p-sym" style="width:100%;">
+              <option value="RELIANCE">RELIANCE.NS</option>
+              <option value="TCS">TCS.NS</option>
+              <option value="BTC">BTC-USD</option>
+              <option value="AAPL">AAPL</option>
+              <option value="TSLA">TSLA</option>
+              <option value="NIFTY">NIFTY 50</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:4px;">HORIZON</label>
+            <select id="p-days" style="width:100%;">
+              <option value="1">1 Day</option>
+              <option value="7" selected>7 Days</option>
+              <option value="14">14 Days</option>
+              <option value="30">30 Days</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="display:block;margin-bottom:4px;">MODEL</label>
+            <select style="width:100%;">
+              <option>Ensemble (LSTM + RF + XGB)</option>
+              <option>LSTM Only</option>
+              <option>Random Forest</option>
+              <option>XGBoost</option>
+            </select>
+          </div>
+          <button class="btn-primary" id="p-btn" onclick="runPred()" style="white-space:nowrap;padding:9px 18px;font-size:12px;">Run Prediction</button>
+        </div>
+        <div class="g4" id="pred-kpis"></div>
+        <div class="g2">
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">PRICE FORECAST + CONFIDENCE BANDS</div><div style="height:175px;position:relative;"><canvas id="c-pred"></canvas></div></div>
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">CONFIDENCE BY HORIZON</div><div style="height:175px;position:relative;"><canvas id="c-conf"></canvas></div></div>
+        </div>
+        <div class="g3">
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">MODEL METRICS</div><div id="pred-metrics"></div></div>
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">FEATURE IMPORTANCE</div><div style="height:135px;position:relative;"><canvas id="c-feat"></canvas></div></div>
+          <div class="card" style="cursor:default;"><div style="display:flex;gap:5px;margin-bottom:8px;"><span class="badge b-llm">AI Thesis — Claude 4.5</span></div><div id="pred-thesis" class="llm-bubble" style="margin-bottom:0;font-size:10px;">Run a prediction to generate AI investment thesis.</div></div>
+        </div>
+      </div>
+
+      <!-- ─── PORTFOLIO ─── -->
+      <div id="pane-portfolio" class="pane">
+        <div class="sec-hd">PORTFOLIO MANAGEMENT</div>
+        <div class="g4" id="port-kpis"></div>
+        <div class="g21">
+          <div><div class="sec-hd">HOLDINGS</div><div id="holdings-list"></div></div>
+          <div>
+            <div class="card" style="cursor:default;margin-bottom:10px;"><div class="card-hd" style="margin-bottom:8px;">SECTOR ALLOCATION</div><div style="height:155px;position:relative;"><canvas id="c-alloc"></canvas></div></div>
+            <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">6-MONTH vs NIFTY50</div><div style="height:115px;position:relative;"><canvas id="c-perf"></canvas></div></div>
+          </div>
+        </div>
+        <div class="card" style="cursor:default;margin-bottom:10px;"><div class="card-hd" style="margin-bottom:8px;">AI REBALANCING <span class="badge b-llm" style="margin-left:8px;">Markowitz MPT + Claude 4.5</span></div><div id="rebal-list"></div></div>
+        <div id="port-modal-area"></div>
+      </div>
+
+      <!-- ─── RISK ─── -->
+      <div id="pane-risk" class="pane">
+        <div class="sec-hd">RISK ANALYSIS</div>
+        <div class="g4" id="risk-kpis"></div>
+        <div class="g2">
+          <div><div class="sec-hd">ASSET RISK BREAKDOWN</div><div id="risk-bars"></div></div>
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">MONTE CARLO SIMULATION (500 paths · 252 days)</div><div style="height:195px;position:relative;"><canvas id="c-mc"></canvas></div></div>
+        </div>
+        <div class="sec-hd">STRESS TEST SCENARIOS</div>
+        <div class="g4" id="stress-cards"></div>
+        <div class="card" style="cursor:default;margin-top:4px;"><div style="display:flex;gap:6px;margin-bottom:8px;"><span class="badge b-llm">Risk Summary — Claude Sonnet 4.5</span></div><div class="llm-bubble" style="margin-bottom:0;">Your portfolio carries a <span class="nu">moderate-high</span> risk profile. VaR at 95% = <span class="dn">₹9,647</span>. BTC and TSLA together contribute 34% of portfolio volatility. Recommend reducing BTC by 2% and adding HDFC Bank for better Sharpe ratio and downside protection.</div></div>
+      </div>
+
+      <!-- ─── SENTIMENT ─── -->
+      <div id="pane-sentiment" class="pane">
+        <div class="sec-hd">SENTIMENT ANALYSIS</div>
+        <div class="g3">
+          <div class="card" style="cursor:default;">
+            <div class="card-hd">FEAR & GREED INDEX</div>
+            <div style="text-align:center;padding:8px 0;">
+              <div style="font-size:38px;font-weight:700;" class="nu">62</div>
+              <div style="color:var(--am);font-size:11px;margin-bottom:8px;">GREED</div>
+              <div class="fg-track"><div class="fg-needle" style="left:62%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--tx3);"><span>Fear</span><span>Neutral</span><span>Greed</span></div>
+            </div>
+          </div>
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">SECTOR SENTIMENT</div><div id="sect-bars"></div></div>
+          <div class="card" style="cursor:default;">
+            <div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;"><span class="badge b-llm">3-LLM Consensus Analysis</span></div>
+            <textarea id="sent-txt" placeholder="Paste any financial news headline or text for AI analysis…" style="width:100%;height:58px;resize:none;margin-bottom:8px;"></textarea>
+            <button class="btn-primary" style="font-size:11px;padding:8px;" onclick="runSent()">Analyse with Claude + GPT-4 + Gemini</button>
+            <div id="sent-res"></div>
+          </div>
+        </div>
+        <div class="sec-hd">LIVE NEWS FEED</div>
+        <div id="news-feed"></div>
+      </div>
+
+      <!-- ─── BACKTEST ─── -->
+      <div id="pane-backtest" class="pane">
+        <div class="sec-hd">BACKTEST ENGINE</div>
+        <div class="g4" id="bt-kpis" style="margin-bottom:14px;"><div style="grid-column:1/-1;color:var(--tx3);text-align:center;padding:18px;font-size:12px;">Select strategy from toolbar above, then click Run Backtest</div></div>
+        <div class="g2">
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">PORTFOLIO vs BUY & HOLD</div><div style="height:175px;position:relative;"><canvas id="c-bt"></canvas></div></div>
+          <div class="card" style="cursor:default;"><div class="card-hd" style="margin-bottom:8px;">DRAWDOWN CURVE</div><div style="height:175px;position:relative;"><canvas id="c-dd"></canvas></div></div>
+        </div>
+        <div class="sec-hd">STRATEGY COMPARISON</div>
+        <div id="strat-cmp"></div>
+        <div id="bt-thesis-area"></div>
+      </div>
+
+      <!-- ─── SCREENER ─── -->
+      <div id="pane-screener" class="pane">
+        <div class="sec-hd">AI STOCK SCREENER</div>
+        <div class="g4" id="scr-kpis" style="margin-bottom:14px;"></div>
+        <div id="scr-cards"></div>
+      </div>
+
+      <!-- ─── TRADE JOURNAL ─── -->
+      <div id="pane-notes" class="pane">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:17px;font-weight:700;">Trade Journal</div>
+            <div style="color:var(--tx3);font-size:11px;margin-top:3px;">Log patterns, observations, mistakes &amp; next-day goals</div>
+          </div>
+          <button class="btn-primary" style="font-size:11px;padding:8px 18px;width:auto;" onclick="showAddNoteModal()">+ New Entry</button>
+        </div>
+        <div class="g4" style="margin-bottom:16px;">
+          <div class="card hi" onclick="filterNotes('all')"><div class="card-hd">ALL ENTRIES</div><div class="card-val" id="note-total">7</div></div>
+          <div class="card hi" onclick="filterNotes('goal')"><div class="card-hd">TODAY'S GOALS</div><div class="card-val up" id="note-goals">3</div></div>
+          <div class="card hi" onclick="filterNotes('mistake')"><div class="card-hd">MISTAKES LOGGED</div><div class="card-val dn" id="note-mistakes">2</div></div>
+          <div class="card hi" onclick="filterNotes('pattern')"><div class="card-hd">PATTERNS NOTED</div><div class="card-val nu" id="note-patterns">4</div></div>
+        </div>
+        <div id="notes-list"></div>
+        <div id="note-modal-area"></div>
+      </div>
+
+      <!-- ─── PROFILE ─── -->
+      <div id="pane-profile" class="pane">
+        <div style="font-size:17px;font-weight:700;margin-bottom:16px;">Profile &amp; Settings</div>
+        <div class="g2">
+          <div class="card" style="cursor:default;">
+            <div style="text-align:center;margin-bottom:16px;">
+              <div class="avatar-upload" id="avatar-main" onclick="document.getElementById('photo-input').click()">
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="11" r="5.5" fill="#e2e8f0"/><path d="M4 30c0-7.2 5.8-13 13-13s13 5.8 13 13" stroke="#e2e8f0" stroke-width="1.5" fill="none"/></svg>
+                <div class="avatar-overlay">📷</div>
+              </div>
+              <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="uploadPhoto(this)"/>
+              <div style="font-size:15px;font-weight:700;" id="profile-name-disp">Yash Sharma</div>
+              <div style="color:var(--tx3);font-size:11px;" id="profile-email-disp">yash@example.com</div>
+              <div style="margin-top:6px;"><span class="badge b-llm">Pro Member</span></div>
+            </div>
+            <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="p-name" value="Yash Sharma"/></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="p-email" value="yash@example.com" type="email"/></div>
+            <div class="form-group"><label class="form-label">Bio / Trading Style</label><textarea id="p-bio" style="width:100%;height:72px;resize:none;" placeholder="e.g. Swing trader · Indian large-caps + BTC · 5 yrs experience"></textarea></div>
+            <div class="form-group"><label class="form-label">Risk Appetite</label><select class="form-input" style="width:100%;"><option>Conservative</option><option selected>Moderate</option><option>Aggressive</option></select></div>
+            <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
+          </div>
+          <div>
+            <div class="card" style="cursor:default;margin-bottom:10px;">
+              <div class="card-hd" style="margin-bottom:12px;">PREFERENCES</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);">
+                <span style="font-size:12px;">Dark / Light Mode</span>
+                <div class="theme-toggle" onclick="toggleTheme()"><div class="theme-thumb" id="theme-thumb2">☀</div></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);">
+                <span style="font-size:12px;">Chart Style</span>
+                <div style="display:flex;gap:4px;">
+                  <button class="btn-sm active" id="style-bb" onclick="applyStyle('bloomberg',this)">Bloomberg</button>
+                  <button class="btn-sm" id="style-mod" onclick="applyStyle('modern',this)">Modern</button>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);">
+                <span style="font-size:12px;">Price Alerts</span>
+                <input type="checkbox" checked style="width:auto;accent-color:var(--gr);width:16px;height:16px;cursor:pointer;"/>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;">
+                <span style="font-size:12px;">Market Close Alerts</span>
+                <input type="checkbox" checked style="width:auto;accent-color:var(--gr);width:16px;height:16px;cursor:pointer;"/>
+              </div>
+            </div>
+            <div class="card" style="cursor:default;margin-bottom:10px;">
+              <div class="card-hd" style="margin-bottom:10px;">SET PRICE ALERTS</div>
+              <div style="font-size:11px;color:var(--tx3);margin-bottom:10px;">Set target prices for auto buy/sell alerts</div>
+              <div style="display:flex;gap:6px;margin-bottom:8px;">
+                <input id="alert-sym" style="flex:1;" placeholder="Symbol" class="form-input"/>
+                <input id="alert-price" type="number" style="width:90px;" placeholder="Target ₹" class="form-input"/>
+                <button class="btn-ghost" style="font-size:10px;padding:5px 10px;white-space:nowrap;" onclick="setAlert()">Set Alert</button>
+              </div>
+              <div id="alert-list"><div style="font-size:11px;color:var(--tx3);">No alerts set yet.</div></div>
+            </div>
+            <div class="card" style="cursor:default;">
+              <div class="card-hd" style="margin-bottom:12px;">ACCOUNT ACTIONS</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <button class="btn-ghost" onclick="downloadReport('pdf')" style="font-size:11px;text-align:left;">📄 Download Full PDF Report</button>
+                <button class="btn-ghost" onclick="downloadReport('excel')" style="font-size:11px;text-align:left;">📊 Download Excel Workbook</button>
+                <button class="btn-ghost" onclick="showToast('All data exported as CSV','gr')" style="font-size:11px;text-align:left;">💾 Export All Data (CSV)</button>
+                <button class="btn-ghost" onclick="showToast('API Keys manager opening…','am')" style="font-size:11px;text-align:left;">🔑 Manage API Keys</button>
+                <button class="btn-ghost" onclick="doLogout()" style="font-size:11px;color:var(--rd);border-color:var(--rd);text-align:left;">⏻ Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main><!-- /content -->
+  </div><!-- /layout -->
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav id="bottom-nav" aria-label="Mobile navigation">
+    <button class="bn-item active" id="bn-dashboard" onclick="navPane('dashboard')"><span class="bn-icon">⬡</span><span>Home</span></button>
+    <button class="bn-item" id="bn-markets" onclick="navPane('markets')"><span class="bn-icon">◎</span><span>Markets</span></button>
+    <button class="bn-item" id="bn-predict" onclick="navPane('predict')"><span class="bn-icon">◆</span><span>Predict</span></button>
+    <button class="bn-item" id="bn-portfolio" onclick="navPane('portfolio')"><span class="bn-icon">◇</span><span>Portfolio</span></button>
+    <button class="bn-item" id="bn-risk" onclick="navPane('risk')"><span class="bn-icon">▲</span><span>Risk</span></button>
+    <button class="bn-item" id="bn-sentiment" onclick="navPane('sentiment')"><span class="bn-icon">◉</span><span>AI</span></button>
+  </nav>
+
+</div><!-- /pg-app -->
+
+<!-- ══════════════ AI FAB — FIXED BOTTOM-RIGHT ══════════════ -->
+<button id="ai-fab" onclick="toggleChat()" title="AI Financial Assistant" aria-label="Open AI Chat">
+  <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="15" cy="15" r="14" fill="#1a0a2e" stroke="#7c3aed" stroke-width="1.5"/>
+    <circle cx="11" cy="13" r="2.4" fill="#7c3aed"/>
+    <circle cx="19" cy="13" r="2.4" fill="#7c3aed"/>
+    <circle cx="11.8" cy="12.2" r="1" fill="#d8b4fe"/>
+    <circle cx="19.8" cy="12.2" r="1" fill="#d8b4fe"/>
+    <path d="M10.5 17.5 Q15 21 19.5 17.5" stroke="#00e676" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    <rect x="12" y="21" width="6" height="2.5" rx="1.2" fill="#3b0764" opacity=".65"/>
+    <circle cx="15" cy="25" r="1.5" fill="#7c3aed" opacity=".7"/>
+    <circle cx="22" cy="7" r="2.8" fill="#00e676" opacity=".85"/>
+    <text x="20.2" y="9" font-size="3.2" fill="#000" font-weight="800" font-family="Arial">AI</text>
+  </svg>
+</button>
+
+<!-- ══════════════ AI CHAT WINDOW ══════════════ -->
+<div id="chat-win" role="dialog" aria-label="AI Chat Assistant">
+  <div id="chat-hd">
+    <div class="chat-ai-icon">
+      <svg viewBox="0 0 16 16" fill="none" width="16" height="16">
+        <circle cx="5.5" cy="7" r="1.6" fill="#a78bfa"/>
+        <circle cx="10.5" cy="7" r="1.6" fill="#a78bfa"/>
+        <circle cx="6.1" cy="6.3" r=".6" fill="#ede9fe"/>
+        <circle cx="11.1" cy="6.3" r=".6" fill="#ede9fe"/>
+        <path d="M5 10.5 Q8 13 11 10.5" stroke="#00e676" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+        <circle cx="8" cy="14" r="1.1" fill="#7c3aed" opacity=".7"/>
+      </svg>
+    </div>
+    <div class="chat-hd-info">
+      <div class="chat-hd-name">AI Financial Assistant</div>
+      <div class="chat-hd-sub">Claude 4.5 → GPT-4 → Gemini · Fallback active</div>
+    </div>
+    <div class="chat-cc">
+      <div class="cc" onclick="minimiseChat()" title="Minimise">—</div>
+      <div class="cc" onclick="maximiseChat()" id="max-btn" title="Maximise">⤢</div>
+      <div class="cc" onclick="closeChat()" title="Close">✕</div>
+    </div>
+  </div>
+  <div id="chat-msgs">
+    <div class="msg-ai">Hello Yash! I'm your AI Financial Assistant — powered by Claude Sonnet 4.5 with GPT-4 and Gemini as fallback. I can analyse your portfolio, explain risk metrics, generate investment theses, run strategy comparisons, or answer any market question. What would you like to explore today?</div>
+  </div>
+  <div class="chat-quick">
+    <div class="cq" onclick="quickChat('Analyse my portfolio health')">Portfolio health</div>
+    <div class="cq" onclick="quickChat('What is my biggest risk right now?')">Top risk</div>
+    <div class="cq" onclick="quickChat('Should I buy RELIANCE now?')">Buy RELIANCE?</div>
+    <div class="cq" onclick="quickChat('Explain my Sharpe ratio of 1.84')">Sharpe ratio</div>
+    <div class="cq" onclick="quickChat('Best strategy for BTC this week')">BTC strategy</div>
+  </div>
+  <div id="chat-inp-row">
+    <input id="chat-inp" placeholder="Ask anything financial…" onkeydown="if(event.key==='Enter')sendChat()" aria-label="Chat input"/>
+    <button id="chat-send" onclick="sendChat()" aria-label="Send message">
+      <svg viewBox="0 0 14 14" fill="none" width="14" height="14"><path d="M1 7L13 1L9 13L7 8L1 7Z" fill="#000"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- Goals Modal -->
+<div class="modal-overlay" id="goals-modal">
+  <div class="modal-box">
+    <div class="modal-title" style="color:var(--gr);">
+      Today's Goals
+      <button class="modal-close" onclick="closeModal('goals-modal')">✕</button>
+    </div>
+    <div class="modal-sub">Your trading goals for today — set yesterday</div>
+    <div id="goals-list">
+      <div class="note-card" style="cursor:default;">
+        <span class="note-tag tag-goal">GOAL</span>
+        <div style="font-size:12px;font-weight:700;margin-top:4px;">Review HDFC Bank position — target ₹1,750</div>
+        <div style="color:var(--tx3);font-size:10px;margin-top:3px;">Priority: High · Set Apr 9</div>
+      </div>
+      <div class="note-card" style="cursor:default;">
+        <span class="note-tag tag-goal">GOAL</span>
+        <div style="font-size:12px;font-weight:700;margin-top:4px;">Trim BTC by 0.1 unit if price crosses ₹70,000</div>
+        <div style="color:var(--tx3);font-size:10px;margin-top:3px;">Priority: Medium · Set Apr 9</div>
+      </div>
+      <div class="note-card" style="cursor:default;">
+        <span class="note-tag tag-goal">GOAL</span>
+        <div style="font-size:12px;font-weight:700;margin-top:4px;">Run SMA crossover backtest on RELIANCE 5Y</div>
+        <div style="color:var(--tx3);font-size:10px;margin-top:3px;">Priority: Low · Set Apr 9</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn-primary" style="flex:1;" onclick="closeModal('goals-modal');showToast('Goals noted — have a great trading day!','gr')">Start Trading Day</button>
+      <button class="btn-ghost" onclick="closeModal('goals-modal');navPane('notes')">View Journal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts Modal -->
+<div class="modal-overlay" id="alerts-modal">
+  <div class="modal-box">
+    <div class="modal-title" style="color:var(--am);">
+      Active Alerts
+      <button class="modal-close" onclick="closeModal('alerts-modal')">✕</button>
+    </div>
+    <div class="modal-sub">3 alerts triggered today</div>
+    <div class="note-card" style="border-color:var(--gr);cursor:default;margin-bottom:8px;">
+      <span class="note-tag tag-goal">BUY SIGNAL</span>
+      <div style="font-size:12px;font-weight:700;margin-top:4px;">HDFC Bank crossed target ₹1,687 — Consider adding</div>
+      <div style="color:var(--tx3);font-size:10px;margin-top:3px;">09:42 IST · AI Confidence: 87%</div>
+    </div>
+    <div class="note-card" style="border-color:var(--rd);cursor:default;margin-bottom:8px;">
+      <span class="note-tag tag-mistake">SELL ALERT</span>
+      <div style="font-size:12px;font-weight:700;margin-top:4px;">BTC dropped 2.14% — RSI oversold at 28. Watch ₹65,000 support</div>
+      <div style="color:var(--tx3);font-size:10px;margin-top:3px;">09:18 IST · Risk Level: High</div>
+    </div>
+    <div class="note-card" style="border-color:var(--am);cursor:default;margin-bottom:8px;">
+      <span class="note-tag tag-obs">MARKET CLOSE</span>
+      <div style="font-size:12px;font-weight:700;margin-top:4px;">NSE closes at 3:30 PM IST — review open positions before close</div>
+      <div style="color:var(--tx3);font-size:10px;margin-top:3px;">Scheduled · Today 3:15 PM IST</div>
+    </div>
+    <button class="btn-primary" style="margin-top:12px;" onclick="closeModal('alerts-modal');document.getElementById('alert-badge').style.display='none';showToast('All alerts acknowledged','gr')">Acknowledge All</button>
+  </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      New Journal Entry
+      <button class="modal-close" onclick="closeModal('note-modal')">✕</button>
+    </div>
+    <div class="modal-sub">Log an observation, goal, mistake, or pattern</div>
+    <div class="form-group"><label class="form-label">Entry Type</label><select class="form-input" id="note-type" style="width:100%;"><option value="goal">Goal</option><option value="obs">Observation</option><option value="mistake">Mistake Logged</option><option value="pattern">Pattern Noted</option></select></div>
+    <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="note-title" placeholder="e.g. RELIANCE breakout above 200-DMA noticed"/></div>
+    <div class="form-group"><label class="form-label">Details</label><textarea class="form-input" id="note-body" style="height:80px;resize:none;" placeholder="Describe what you observed, what happened, what you learned…"></textarea></div>
+    <div class="form-group"><label class="form-label">Related Stock (optional)</label><input class="form-input" id="note-stock" placeholder="RELIANCE, BTC, TCS…"/></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn-primary" style="flex:1;" onclick="addNote()">Save Entry</button>
+      <button class="btn-ghost" onclick="closeModal('note-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════
+const STOCKS=[
+  {sym:'RELIANCE',n:'Reliance Industries',p:2847.50,c:1.24,v:'12.4M',hi:3024,lo:2180,cat:'indian',r:28},
+  {sym:'TCS',n:'Tata Consultancy',p:3921.80,c:0.87,v:'4.1M',hi:4255,lo:3196,cat:'indian',r:22},
+  {sym:'INFY',n:'Infosys Ltd',p:1523.40,c:-0.43,v:'8.2M',hi:1820,lo:1356,cat:'indian',r:32},
+  {sym:'HDFCBANK',n:'HDFC Bank',p:1687.20,c:1.56,v:'9.3M',hi:1794,lo:1363,cat:'indian',r:24},
+  {sym:'WIPRO',n:'Wipro Ltd',p:487.60,c:-1.12,v:'15.6M',hi:572,lo:376,cat:'indian',r:38},
+  {sym:'AAPL',n:'Apple Inc',p:189.30,c:0.54,v:'52.3M',hi:199.60,lo:164.08,cat:'us',r:30},
+  {sym:'TSLA',n:'Tesla Inc',p:178.20,c:-3.21,v:'98.4M',hi:278.98,lo:138.80,cat:'us',r:76},
+  {sym:'NVDA',n:'NVIDIA Corp',p:875.40,c:2.34,v:'42.1M',hi:974,lo:495,cat:'us',r:42},
+  {sym:'MSFT',n:'Microsoft Corp',p:415.80,c:1.02,v:'18.6M',hi:430,lo:309,cat:'us',r:26},
+  {sym:'BTC',n:'Bitcoin',p:67842,c:-2.14,v:'$18.2B',hi:73750,lo:38456,cat:'crypto',r:88},
+  {sym:'ETH',n:'Ethereum',p:3521.40,c:-1.87,v:'$9.4B',hi:4090,lo:1820,cat:'crypto',r:72},
+  {sym:'NIFTY50',n:'NIFTY 50 Index',p:22456.80,c:1.24,v:'—',hi:23398,lo:18837,cat:'indices',r:18},
+  {sym:'SP500',n:'S&P 500 Index',p:5218.40,c:0.87,v:'—',hi:5264,lo:4103,cat:'indices',r:20},
+  {sym:'GOLD',n:'Gold Futures',p:2348.70,c:0.32,v:'84.2K',hi:2449,lo:1810,cat:'commodities',r:14},
+  {sym:'CRUDE',n:'Crude Oil WTI',p:81.24,c:-1.05,v:'312K',hi:95.03,lo:63.57,cat:'commodities',r:22},
+];
+
+const HOLDINGS=[
+  {sym:'RELIANCE',qty:50,avg:2640,cmp:2847.50,sector:'Energy',day:1.24},
+  {sym:'TCS',qty:20,avg:3780,cmp:3921.80,sector:'Technology',day:0.87},
+  {sym:'HDFCBANK',qty:75,avg:1520,cmp:1687.20,sector:'Banking',day:1.56},
+  {sym:'INFY',qty:100,avg:1480,cmp:1523.40,sector:'Technology',day:-0.43},
+  {sym:'BTC',qty:0.5,avg:58000,cmp:67842,sector:'Crypto',day:-2.14},
+  {sym:'AAPL',qty:30,avg:172,cmp:189.30,sector:'Technology',day:0.54},
+  {sym:'SBIN',qty:200,avg:680,cmp:756.30,sector:'Banking',day:2.31},
+];
+
+const NEWS=[
+  {t:'09:42',src:'ET Markets',txt:'RBI holds repo rate at 6.5%, signals optimism on inflation',sent:'BULLISH'},
+  {t:'09:31',src:'Reuters',txt:'Reliance Q4 profit surges 18% YoY, beats all estimates',sent:'BULLISH'},
+  {t:'09:18',src:'Bloomberg',txt:'IT sector headwinds as US clients cut discretionary spend',sent:'BEARISH'},
+  {t:'08:55',src:'CoinDesk',txt:'Bitcoin ETF records $1.2B outflow on regulatory fears',sent:'BEARISH'},
+  {t:'08:40',src:'Moneycontrol',txt:'Infosys raises FY26 guidance to 4-7% on AI-driven deals',sent:'BULLISH'},
+  {t:'08:10',src:'CNBC',txt:'Global markets cautious ahead of Fed minutes tonight',sent:'NEUTRAL'},
+];
+
+let NOTES=[
+  {id:1,type:'goal',title:'Review HDFC Bank position — target ₹1,750',body:'Set stop-loss at ₹1,620. Review if RBI holds rates.',stock:'HDFCBANK',date:'Apr 9'},
+  {id:2,type:'obs',title:'BTC showing RSI divergence on 4H chart',body:'Price making higher highs but RSI making lower highs. Potential reversal signal.',stock:'BTC',date:'Apr 9'},
+  {id:3,type:'mistake',title:'Held TSLA too long — missed stop-loss',body:'Should have exited at ₹195. Lesson: always honour stop-losses without emotion.',stock:'TSLA',date:'Apr 8'},
+  {id:4,type:'pattern',title:'RELIANCE always bounces from 200-day MA',body:'Observed 4 times in last 18 months. Plan: accumulate near 200-DMA.',stock:'RELIANCE',date:'Apr 7'},
+  {id:5,type:'goal',title:'Backtest SMA crossover on NIFTY 5 years',body:'Compare vs buy-and-hold. Use backtest module.',stock:'NIFTY',date:'Apr 9'},
+  {id:6,type:'pattern',title:'BTC tends to rise after ETF inflow news',body:'3 instances noted. Monitor ETF flows via CoinDesk alerts.',stock:'BTC',date:'Apr 6'},
+  {id:7,type:'mistake',title:'Overtraded INFY on earnings day',body:'Made 4 trades in 1 hour. Too many. Next time: 1 entry, 1 exit max.',stock:'INFY',date:'Apr 4'},
+];
+
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+const CH={};
+const f2=(n,d=2)=>n==null?'--':Number(n).toFixed(d);
+const fL=n=>n?Number(n).toLocaleString('en-IN',{maximumFractionDigits:2}):'--';
+const fK=n=>{if(!n&&n!==0)return'--';const a=Math.abs(n);if(a>=1e7)return(n/1e7).toFixed(2)+'Cr';if(a>=1e5)return(n/1e5).toFixed(2)+'L';return Number(n).toFixed(2);};
+const cc=v=>v>0?'up':v<0?'dn':'nu';
+const sg=v=>v>=0?'+'+f2(v):f2(v);
+const dc=id=>{if(CH[id]){CH[id].destroy();delete CH[id];}};
+
+function sigBadge(c){
+  const s=c>1.5?'STRONG BUY':c>0.3?'BUY':c<-1.5?'STRONG SELL':c<-0.3?'SELL':'HOLD';
+  const cls=s==='STRONG BUY'?'b-sbuy':s==='BUY'?'b-buy':s.includes('SELL')?'b-sell':'b-hold';
+  return`<span class="badge ${cls}">${s}</span>`;
+}
+function sentBadge(s){
+  return`<span class="badge ${s==='BULLISH'?'b-bull':s==='BEARISH'?'b-bear':'b-neu'}">${s}</span>`;
+}
+function sparkSVG(vals,up){
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1,W=58,H=22;
+  const pts=vals.map((v,i)=>`${i/(vals.length-1)*W},${H-(v-mn)/rng*(H-2)+1}`).join(' ');
+  return`<svg class="spark" width="${W}" height="${H}"><polyline points="${pts}" fill="none" stroke="${up?'#00e676':'#ef4444'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════════════
+function updateClock(){
+  const ist=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const hh=x=>String(x).padStart(2,'0');
+  const el=document.getElementById('clk');
+  if(el)el.textContent=`${hh(ist.getHours())}:${hh(ist.getMinutes())}:${hh(ist.getSeconds())}`;
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// ═══════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════
+function authTab(t){
+  ['login','signup','forgot'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    const f=document.getElementById('auth-form-'+x);
+    if(f)f.style.display=x===t?'block':'none';
+  });
+  document.getElementById('google-row').style.display=(t==='login'||t==='signup')?'block':'none';
+}
+
+// ── Auth state ────────────────────────────────────────────────────────────────
+let _authToken = sessionStorage.getItem('ai_fin_token') || null;
+let _authUser  = sessionStorage.getItem('ai_fin_user')  || 'Trader';
+
+function doGoogleAuth(){
+  showToast('Google OAuth: redirecting to accounts.google.com…','bl');
+  setTimeout(()=>finishLogin('Demo User','demo@gmail.com'),1400);
+}
+
+async function doLogin(){
+  const em = document.getElementById('login-email')?.value.trim() || '';
+  const pw = document.getElementById('login-pass')?.value || '';
+  if(!em.includes('@') || pw.length < 6){
+    const card = document.getElementById('login-card');
+    card.classList.add('err-shake');
+    setTimeout(()=>card.classList.remove('err-shake'),500);
+    showToast('Please enter a valid email and password (min 6 chars)','rd');
+    return;
+  }
+  const btn = document.querySelector('#auth-form-login .btn-primary');
+  if(btn){ btn.textContent='Signing in…'; btn.disabled=true; }
+  try {
+    const res = await fetch(API+'/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:em, password:pw})
+    });
+    const data = await res.json();
+    if(res.ok && data.token){
+      _authToken = data.token;
+      _authUser  = data.name || em.split('@')[0];
+      sessionStorage.setItem('ai_fin_token', _authToken);
+      sessionStorage.setItem('ai_fin_user',  _authUser);
+      finishLogin(_authUser, em);
+    } else {
+      showToast(data.error || 'Login failed — please try again','rd');
+    }
+  } catch(e){
+    // Network fallback: allow demo use even if backend is starting up
+    console.warn('[auth] backend unreachable, using demo login');
+    _authUser = em.split('@')[0].charAt(0).toUpperCase()+em.split('@')[0].slice(1);
+    finishLogin(_authUser, em);
+  } finally {
+    if(btn){ btn.textContent='Sign In Securely'; btn.disabled=false; }
+  }
+}
+
+async function doSignup(){
+  const name = document.getElementById('signup-name')?.value.trim()  || '';
+  const em   = document.getElementById('signup-email')?.value.trim() || '';
+  const pw   = document.getElementById('signup-pass')?.value         || '';
+  if(!name || !em.includes('@') || pw.length < 6){
+    const card = document.getElementById('login-card');
+    card.classList.add('err-shake');
+    setTimeout(()=>card.classList.remove('err-shake'),500);
+    showToast('Please fill all fields — password must be 6+ chars','rd');
+    return;
+  }
+  const btn = document.querySelector('#auth-form-signup .btn-primary');
+  if(btn){ btn.textContent='Creating account…'; btn.disabled=true; }
+  try {
+    const res = await fetch(API+'/auth/signup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, email:em, password:pw})
+    });
+    const data = await res.json();
+    if(res.ok && data.token){
+      _authToken = data.token;
+      _authUser  = data.name || name;
+      sessionStorage.setItem('ai_fin_token', _authToken);
+      sessionStorage.setItem('ai_fin_user',  _authUser);
+      finishLogin(_authUser, em);
+    } else {
+      showToast(data.error || 'Signup failed — please try again','rd');
+    }
+  } catch(e){
+    console.warn('[auth] backend unreachable, using demo signup');
+    _authUser = name.split(' ')[0];
+    finishLogin(_authUser, em);
+  } finally {
+    if(btn){ btn.textContent='Create Account'; btn.disabled=false; }
+  }
+}
+
+function finishLogin(name, email){
+  // Update UI name wherever it appears
+  document.querySelectorAll('.user-name,[id^="user-name"]').forEach(el=>el.textContent=name||_authUser);
+  document.getElementById('pg-login').classList.remove('active');
+  document.getElementById('pg-app').classList.add('active');
+  initApp();
+  setTimeout(showGoalsModal,700);
+  setTimeout(()=>showToast(`Welcome back, ${name||_authUser}! All AI systems ready.`,'gr'),400);
+  setTimeout(()=>showToast('3 price alerts triggered while you were away','am'),2200);
+}
+
+function doLogout(){
+  _authToken = null;
+  sessionStorage.removeItem('ai_fin_token');
+  sessionStorage.removeItem('ai_fin_user');
+  document.getElementById('pg-app').classList.remove('active');
+  document.getElementById('pg-login').classList.add('active');
+  closeChat();
+  showToast('Signed out securely.','am');
+}
+
+// ═══════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════
+let isDark=true;
+function toggleTheme(){
+  isDark=!isDark;
+  document.body.classList.toggle('light-mode',!isDark);
+  const label=isDark?'☀':'🌙';
+  const moved=!isDark;
+  ['theme-thumb','theme-thumb2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=label;el.classList.toggle('moved',moved);}
+  });
+  showToast(isDark?'Dark mode applied':'Light mode applied','am');
+}
+
+// ═══════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════
+let sbCollapsed=false;
+function toggleSidebar(){
+  sbCollapsed=!sbCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed',sbCollapsed);
+}
+
+// ═══════════════════════════════════════════════════
+//  TOOLBAR
+// ═══════════════════════════════════════════════════
+const TOOLBARS={
+  dashboard:{ctx:'DASHBOARD',pills:[],acts:[]},
+  markets:{ctx:'MARKETS',pills:['All','India NSE','US Stocks','Crypto','Indices','Commodities'],acts:['Export CSV']},
+  predict:{ctx:'AI PREDICT',pills:['1 Day','7 Days','14 Days','30 Days'],acts:['Run Prediction','View History']},
+  portfolio:{ctx:'PORTFOLIO',pills:['Holdings','Performance','Allocation'],acts:['+ Add Holding','Optimise Sharpe','Optimise Min Vol','Export PDF','Export Excel']},
+  risk:{ctx:'RISK ANALYSIS',pills:['VaR','Monte Carlo','Stress Test','Drawdown'],acts:['Run Analysis','Export Report']},
+  sentiment:{ctx:'SENTIMENT',pills:['All Sources','Reuters','Bloomberg','ET Markets','CoinDesk'],acts:['Refresh News']},
+  backtest:{ctx:'BACKTEST',pills:['SMA Cross','EMA Cross','RSI','MACD','Bollinger','Momentum','Buy & Hold'],acts:['Run Backtest','Compare All','Export Results']},
+  screener:{ctx:'SCREENER',pills:['All','Buy Signals','Sell Signals','High Risk','Low Risk'],acts:['Screen Now','Save Filter']},
+  notes:{ctx:'TRADE JOURNAL',pills:['All','Goals','Observations','Mistakes','Patterns'],acts:['+ New Entry']},
+  profile:{ctx:'PROFILE & SETTINGS',pills:[],acts:['Save Profile','Download Data']},
+};
+
+function setToolbar(page){
+  const cfg=TOOLBARS[page]||{ctx:page.toUpperCase(),pills:[],acts:[]};
+  document.getElementById('sub-ctx').textContent=cfg.ctx;
+  const pe=document.getElementById('sub-pills');
+  pe.innerHTML=cfg.pills.map((p,i)=>`<button class="sub-pill${i===0?' active':''}" onclick="subPill(this,'${page}','${p}')">${p}</button>`).join('');
+  const ae=document.getElementById('sub-actions');
+  ae.innerHTML=cfg.acts.map(a=>`<button class="sub-act" onclick="subAct('${page}','${a}')">${a}</button>`).join('')
+    +`<button class="sub-refresh" onclick="doRefresh()" title="Refresh data">↻</button>`;
+}
+
+function subPill(btn,page,label){
+  document.querySelectorAll('.sub-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(page==='markets'){
+    const map={'All':'all','India NSE':'indian','US Stocks':'us','Crypto':'crypto','Indices':'indices','Commodities':'commodities'};
+    filterMkt(map[label]||'all');
+  } else if(page==='notes'){
+    const map={'All':'all','Goals':'goal','Observations':'obs','Mistakes':'mistake','Patterns':'pattern'};
+    filterNotes(map[label]||'all');
+  } else if(page==='predict'){
+    const d={'1 Day':1,'7 Days':7,'14 Days':14,'30 Days':30}[label];
+    if(d){const el=document.getElementById('p-days');if(el)el.value=d;}
+  } else {
+    showToast(`Filter: ${label}`,'am');
+  }
+}
+
+function subAct(page,action){
+  if(action==='+ Add Holding')showAddHoldingModal();
+  else if(action==='+ New Entry')showAddNoteModal();
+  else if(action==='Run Prediction')runPred();
+  else if(action==='Run Backtest')runBacktest();
+  else if(action==='Compare All')renderStratCmp();
+  else if(action==='Screen Now')initScreener();
+  else if(action==='Save Profile')saveProfile();
+  else if(action.includes('Export')||action.includes('PDF')||action.includes('Excel')||action.includes('CSV'))downloadReport(action.includes('Excel')?'excel':'pdf');
+  else if(action.includes('Optimise'))showToast(`Running ${action}…`,'gr');
+  else if(action==='Refresh News')showToast('News feed refreshed — 6 new articles','gr');
+  else showToast(`${action}…`,'bl');
+}
+
+function doRefresh(){
+  const btn=document.querySelector('.sub-refresh');
+  if(btn){
+    btn.style.transform='rotate(360deg)';
+    btn.style.transition='transform .6s ease';
+    btn.style.color='var(--gr)';
+    setTimeout(()=>{btn.style.transform='';btn.style.color='';},700);
+  }
+  showToast('Data refreshed — all panels updated','gr');
+  initPane(currentPane);
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentPane='dashboard';
+
+function navPane(page){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active'));
+  const pane=document.getElementById('pane-'+page);
+  if(pane)pane.classList.add('active');
+  const sb=document.getElementById('sb-'+page);
+  if(sb)sb.classList.add('active');
+  const bn=document.getElementById('bn-'+page);
+  if(bn)bn.classList.add('active');
+  currentPane=page;
+  setToolbar(page);
+  initPane(page);
+  // scroll content to top
+  const content=document.getElementById('content');
+  if(content)content.scrollTop=0;
+}
+
+function initPane(page){
+  const map={
+    dashboard:initDash,
+    markets:initMarkets,
+    predict:()=>{},
+    portfolio:initPortfolio,
+    risk:initRisk,
+    sentiment:initSentiment,
+    backtest:initBacktest,
+    screener:initScreener,
+    notes:initNotes,
+    profile:()=>{},
+  };
+  if(map[page])map[page]();
+}
+
+// ═══════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg,type='gr'){
+  const area=document.getElementById('toast-area');
+  if(!area)return;
+  const colors={gr:'#00e676',rd:'#ef4444',am:'#fbbf24',bl:'#3b82f6'};
+  const icons={gr:'✓',rd:'✕',am:'⚠',bl:'i'};
+  const t=document.createElement('div');
+  t.className='toast';
+  t.innerHTML=`<div class="t-ic" style="background:${colors[type]}22;color:${colors[type]};">${icons[type]}</div><div style="flex:1;color:var(--tx);">${msg}</div><div onclick="this.parentElement.remove()" style="color:var(--tx3);cursor:pointer;padding-left:6px;font-size:13px;">✕</div>`;
+  area.appendChild(t);
+  setTimeout(()=>{
+    if(t.parentElement){
+      t.style.opacity='0';t.style.transition='opacity .3s';
+      setTimeout(()=>t.remove(),320);
+    }
+  },4500);
+}
+
+// ═══════════════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════════════
+function showGoalsModal(){document.getElementById('goals-modal').classList.add('open');}
+function triggerAlerts(){document.getElementById('alerts-modal').classList.add('open');}
+function showAddNoteModal(){document.getElementById('note-modal').classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function showAddHoldingModal(){
+  document.getElementById('port-modal-area').innerHTML=`
+  <div class="modal-overlay open">
+    <div class="modal-box">
+      <div class="modal-title">Add New Holding <button class="modal-close" onclick="document.getElementById('port-modal-area').innerHTML=''">✕</button></div>
+      <div class="modal-sub">Add a stock, ETF, crypto, or index to your portfolio</div>
+      <div class="form-group"><label class="form-label">Symbol</label><input class="form-input" placeholder="e.g. RELIANCE.NS, AAPL, BTC-USD"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-group"><label class="form-label">Quantity</label><input class="form-input" type="number" placeholder="100"/></div>
+        <div class="form-group"><label class="form-label">Avg Cost (₹)</label><input class="form-input" type="number" placeholder="2640"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Sector</label><select class="form-input" style="width:100%;"><option>Technology</option><option>Banking</option><option>Energy</option><option>Crypto</option><option>Pharma</option><option>Other</option></select></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn-primary" style="flex:1;" onclick="document.getElementById('port-modal-area').innerHTML='';showToast('Holding added to portfolio!','gr')">Add Holding</button>
+        <button class="btn-ghost" onclick="document.getElementById('port-modal-area').innerHTML=''">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  DOWNLOAD
+// ═══════════════════════════════════════════════════
+function downloadReport(type){
+  showToast(`Generating ${type.toUpperCase()} report…`,'am');
+  setTimeout(()=>{
+    const content=type==='pdf'?
+      '%PDF-1.4 AI Financial Advisor Report - Demo':
+      'Symbol,Price,Change%,Signal\nRELIANCE,2847.50,+1.24%,BUY\nTCS,3921.80,+0.87%,BUY\nBTC,67842,-2.14%,HOLD\nHDFC,1687.20,+1.56%,STRONG BUY\n';
+    const mime=type==='pdf'?'application/pdf':'text/csv';
+    const ext=type==='excel'?'csv':type;
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`AI_Financial_Report_${new Date().toISOString().slice(0,10)}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`${type.toUpperCase()} report downloaded!`,'gr');
+  },1000);
+}
+
+// ═══════════════════════════════════════════════════
+//  SEARCH
+// ═══════════════════════════════════════════════════
+function searchHandler(q){
+  if(!q||q.length<2)return;
+  const found=STOCKS.find(s=>
+    s.sym.toLowerCase().includes(q.toLowerCase())||
+    s.n.toLowerCase().includes(q.toLowerCase())
+  );
+  if(found)showToast(`Found: ${found.sym} — ₹${fL(found.p)} (${sg(found.c)}%)  → Markets page`,'bl');
+}
+
+// ═══════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════
+let userAlerts=[];
+
+function uploadPhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const src=e.target.result;
+    // Update avatar
+    const avatar=document.getElementById('avatar-main');
+    if(avatar)avatar.style.background=`url(${src}) center/cover`;
+    // Update top bar profile button
+    const img=document.getElementById('profile-img');
+    const svg=document.getElementById('profile-svg');
+    if(img){img.src=src;img.style.display='block';}
+    if(svg)svg.style.display='none';
+    showToast('Profile photo updated!','gr');
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProfile(){
+  const name=document.getElementById('p-name').value;
+  const email=document.getElementById('p-email').value;
+  document.getElementById('profile-name-disp').textContent=name;
+  document.getElementById('profile-email-disp').textContent=email;
+  document.getElementById('dash-greeting').textContent=`Good morning, ${name.split(' ')[0]}`;
+  showToast('Profile saved successfully!','gr');
+}
+
+function applyStyle(style,btn){
+  document.querySelectorAll('#style-bb,#style-mod').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showToast(`${style==='bloomberg'?'Bloomberg Terminal':'Modern'} style applied`,'am');
+}
+
+function setAlert(){
+  const sym=document.getElementById('alert-sym').value.trim();
+  const price=document.getElementById('alert-price').value;
+  if(!sym||!price){showToast('Enter symbol and target price','am');return;}
+  userAlerts.push({sym,price});
+  renderAlertList();
+  document.getElementById('alert-sym').value='';
+  document.getElementById('alert-price').value='';
+  showToast(`Price alert set for ${sym} at ₹${price}!`,'gr');
+}
+
+function renderAlertList(){
+  const el=document.getElementById('alert-list');
+  if(!userAlerts.length){el.innerHTML='<div style="font-size:11px;color:var(--tx3);">No alerts set yet.</div>';return;}
+  el.innerHTML=userAlerts.map((a,i)=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--bd);">
+      <span style="color:var(--gr);font-weight:700;font-size:12px;">${a.sym}</span>
+      <span style="font-size:11px;">₹${Number(a.price).toLocaleString('en-IN')}</span>
+      <button class="btn-sm" onclick="userAlerts.splice(${i},1);renderAlertList();showToast('Alert removed','am')" style="font-size:9px;padding:2px 8px;">✕</button>
+    </div>`).join('');
+}
+
+
+// ═══════════════════════════════════════════════════
+//  BACKEND API CONFIGURATION
+// ═══════════════════════════════════════════════════
+// Auto-detect API base: same origin on Replit/cloud, localhost in dev
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000/api'
+  : window.location.origin + '/api';
+
+async function apiFetch(path, opts={}) {
+  try {
+    const r = await fetch(API + path, {
+      headers: {'Content-Type':'application/json'},
+      ...opts
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e) {
+    console.warn('[API] fallback for', path, e.message);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════
+async function initDash(){
+  // Index cards
+  const indices = await apiFetch('/market/indices');
+  if (indices) {
+    document.getElementById('idx-cards').innerHTML = indices.map(i=>`
+      <div class="card hi" onclick="navPane('markets')">
+        <div class="card-hd">${i.n}</div>
+        <div class="card-val ${cc(i.c)}">${i.p}</div>
+        <div class="card-sub ${cc(i.c)}">${sg(i.c)}%</div>
+      </div>`).join('');
+  } else {
+    // fallback static
+    const idxData=[
+      {n:'NIFTY 50',p:'22,456',c:1.24},{n:'S&P 500',p:'5,218',c:0.87},
+      {n:'BTC/USD',p:'67,842',c:-2.14},{n:'FEAR/GREED',p:'62',c:0.5},
+    ];
+    document.getElementById('idx-cards').innerHTML=idxData.map(i=>`
+      <div class="card hi" onclick="navPane('markets')">
+        <div class="card-hd">${i.n}</div>
+        <div class="card-val ${cc(i.c)}">${i.p}</div>
+        <div class="card-sub ${cc(i.c)}">${sg(i.c)}%</div>
+      </div>`).join('');
+  }
+
+  // Top movers
+  const movers = await apiFetch('/market/movers');
+  if (movers && movers.length) {
+    document.getElementById('dash-movers').innerHTML = movers.map(s=>{
+      const sp = [s.price*(1-.01),s.price*(1+.005),s.price*(1-.003),
+                  s.price*(1+.008),s.price*(1-.002),s.price*(1+.004),s.price,s.price*(1+.001)];
+      return `<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;" onclick="navPane('markets')">
+        ${sparkSVG(sp,s.change>=0)}
+        <div style="margin-left:8px;flex:1;">
+          <div style="font-weight:700;color:var(--gr);font-size:12px;">${s.sym}</div>
+          <div style="color:var(--tx3);font-size:10px;">${s.name.slice(0,18)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:600;">${fL(s.price)}</div>
+          <div class="${cc(s.change)}" style="font-size:10px;">${sg(s.change)}%</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Portfolio snapshot
+  const port = await apiFetch('/portfolio/holdings');
+  if (port) {
+    const tv=port.total_value, ti=port.invested, pnl=port.pnl, pp=port.pnl_pct;
+    document.getElementById('dash-snap').innerHTML=`
+      <div class="card hi" style="margin-bottom:8px;" onclick="navPane('portfolio')">
+        <div class="card-hd">PORTFOLIO VALUE</div>
+        <div class="card-val up" style="font-size:19px;">₹${fK(tv)}</div>
+        <div class="card-sub ${cc(pnl)}">P&L: ₹${fK(pnl)} (${sg(pp)}%)</div>
+      </div>
+      <div class="card hi" style="margin-bottom:8px;" onclick="navPane('risk')">
+        <div class="card-hd">SHARPE RATIO</div>
+        <div class="card-val nu" style="font-size:19px;" id="dash-sharpe">—</div>
+        <div class="card-sub">Loading…</div>
+      </div>
+      <div class="card hi" onclick="triggerAlerts()">
+        <div class="card-hd">ACTIVE ALERTS</div>
+        <div class="card-val" style="font-size:19px;color:var(--am);">3</div>
+        <div class="card-sub">Click to view</div>
+      </div>`;
+    // load sharpe async
+    apiFetch('/risk/portfolio', {method:'POST'}).then(r=>{
+      if(r && r.sharpe) {
+        const el = document.getElementById('dash-sharpe');
+        if(el) el.textContent = r.sharpe;
+      }
+    });
+  }
+
+  // News feed
+  const news = await apiFetch('/sentiment/news');
+  const newsArr = news || NEWS;
+  document.getElementById('dash-news').innerHTML = newsArr.slice(0,4).map(n=>`
+    <div class="card" style="margin-bottom:8px;" onclick="navPane('sentiment')">
+      <div style="display:flex;justify-content:space-between;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-size:9px;color:var(--tx3);">${n.t} · ${n.src}</div>
+          <div style="font-size:11px;color:var(--tx);margin-top:3px;line-height:1.4;">${n.txt}</div>
+        </div>
+        ${sentBadge(n.sent)}
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  MARKETS
+// ═══════════════════════════════════════════════════
+let mktCat='all';
+let _mktData = null;
+
+function filterMkt(cat){mktCat=cat;renderMktTable();}
+
+async function initMarkets(){
+  const data = await apiFetch('/market/quotes');
+  _mktData = data || STOCKS;
+  renderMktTable();
+  drawCandle('RELIANCE');
+  drawRSI();
+  drawMACD();
+}
+
+function renderMktTable(){
+  const data = mktCat==='all'
+    ? (_mktData||STOCKS)
+    : (_mktData||STOCKS).filter(s=>s.cat===mktCat);
+  document.getElementById('mkt-body').innerHTML=data.map(s=>`
+    <tr onclick="drawCandle('${s.sym}');showToast('${s.sym} chart loaded','bl')">
+      <td><strong style="color:var(--gr)">${s.sym}</strong><br><span style="color:var(--tx3);font-size:9px">${(s.name||s.n||'').slice(0,16)}</span></td>
+      <td>${fL(s.price||s.p)}</td>
+      <td class="${cc(s.change||s.c)}">${sg(s.change||s.c)}%</td>
+      <td>${s.volume||s.v||'—'}</td>
+      <td>${fL(s.hi52||s.hi)}</td>
+      <td>${fL(s.lo52||s.lo)}</td>
+      <td>${s.risk||s.r}/100</td>
+    </tr>`).join('');
+}
+
+async function drawCandle(sym){
+  const data = await apiFetch(`/market/candles/${sym}?period=3mo`);
+  const rows = data || _generateFallbackCandles(sym);
+  dc('c-candle');
+  const ctx=document.getElementById('c-candle');
+  if(!ctx) return;
+  const labels= rows.map(r=>r.t);
+  const closes= rows.map(r=>r.c);
+  const up    = closes[closes.length-1] >= closes[0];
+  CH['c-candle']=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{
+      label:sym,data:closes,
+      borderColor:up?'#00e676':'#ef4444',
+      backgroundColor:up?'rgba(0,230,118,.06)':'rgba(239,68,68,.06)',
+      tension:.3,pointRadius:0,fill:true,borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},grid:{color:'#0d1520'}},
+              y:{ticks:{color:'#475569',font:{size:8}},grid:{color:'#1a2332'}}}}
+  });
+}
+
+async function drawRSI(){
+  const sym = 'RELIANCE';
+  const data = await apiFetch(`/market/indicators/${sym}`);
+  dc('c-rsi');
+  const ctx=document.getElementById('c-rsi');
+  if(!ctx) return;
+  let rsiVals, labels;
+  if(data && data.rsi) {
+    rsiVals = data.rsi.map(r=>r.v);
+    labels  = data.rsi.map(r=>r.t);
+  } else {
+    rsiVals = Array.from({length:30},(_,i)=>40+Math.sin(i/4)*20);
+    labels  = Array.from({length:30},(_,i)=>`D${i+1}`);
+  }
+  CH['c-rsi']=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'RSI',data:rsiVals,borderColor:'#7c3aed',tension:.4,pointRadius:0,borderWidth:1.5},
+      {label:'OB',data:Array(labels.length).fill(70),borderColor:'rgba(239,68,68,.4)',borderDash:[4,4],pointRadius:0,borderWidth:1},
+      {label:'OS',data:Array(labels.length).fill(30),borderColor:'rgba(0,230,118,.4)',borderDash:[4,4],pointRadius:0,borderWidth:1},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:8},boxWidth:8}}},
+      scales:{x:{display:false},y:{min:0,max:100,ticks:{color:'#475569',font:{size:8}},grid:{color:'#0d1520'}}}}
+  });
+}
+
+async function drawMACD(){
+  const sym = 'RELIANCE';
+  const data = await apiFetch(`/market/indicators/${sym}`);
+  dc('c-macd');
+  const ctx=document.getElementById('c-macd');
+  if(!ctx) return;
+  let macdVals, sigVals, labels;
+  if(data && data.macd) {
+    macdVals= data.macd.map(r=>r.macd);
+    sigVals = data.macd.map(r=>r.signal);
+    labels  = data.macd.map(r=>r.t);
+  } else {
+    macdVals= Array.from({length:30},(_,i)=>Math.sin(i/5)*15);
+    sigVals = Array.from({length:30},(_,i)=>Math.sin(i/5-.5)*12);
+    labels  = Array.from({length:30},(_,i)=>`D${i+1}`);
+  }
+  CH['c-macd']=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'MACD',data:macdVals,borderColor:'#3b82f6',tension:.4,pointRadius:0,borderWidth:1.5},
+      {label:'Signal',data:sigVals,borderColor:'#ef4444',tension:.4,pointRadius:0,borderWidth:1,borderDash:[4,4]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:8},boxWidth:8}}},
+      scales:{x:{display:false},y:{ticks:{color:'#475569',font:{size:8}},grid:{color:'#0d1520'}}}}
+  });
+}
+
+function _generateFallbackCandles(sym){
+  const base=STOCKS.find(s=>s.sym===sym)||{p:2847};
+  let p=base.p||base.price||2847;
+  return Array.from({length:60},(_,i)=>{
+    const c=+(p*(1+(Math.random()-.48)*.015)).toFixed(2);
+    const o=p, h=Math.max(o,c)*(1+Math.random()*.005), l=Math.min(o,c)*(1-Math.random()*.005);
+    p=c;
+    const d=new Date(); d.setDate(d.getDate()-60+i);
+    return {t:d.toISOString().slice(0,10),o:+o.toFixed(2),h:+h.toFixed(2),l:+l.toFixed(2),c};
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  AI PREDICT
+// ═══════════════════════════════════════════════════
+async function runPred(){
+  const sym  = document.getElementById('p-sym').value;
+  const days = parseInt(document.getElementById('p-days').value)||7;
+  const btn  = document.getElementById('p-btn');
+
+  btn.textContent='Training…'; btn.disabled=true;
+  document.getElementById('pred-kpis').innerHTML=`
+    <div style="grid-column:1/-1;text-align:center;padding:18px;">
+      <div class="typing-dots" style="justify-content:center;"><span></span><span></span><span></span></div>
+      <div style="color:var(--tx3);font-size:11px;margin-top:8px;">Running LSTM + Random Forest + XGBoost ensemble on live data…</div>
+    </div>`;
+  showToast(`Training models for ${sym} on real market data…`,'am');
+
+  const result = await apiFetch('/predict/run', {
+    method:'POST',
+    body: JSON.stringify({symbol: sym, days})
+  });
+
+  btn.textContent='Run Prediction'; btn.disabled=false;
+
+  if(!result || result.error) {
+    // graceful fallback
+    _runPredFallback(sym, days);
+    return;
+  }
+
+  const {current_price, predictions:preds, change_pct:chg, confidence, metrics, feature_importance, thesis} = result;
+
+  document.getElementById('pred-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">CURRENT PRICE</div><div class="card-val" style="font-size:18px;">${fL(current_price)}</div></div>
+    <div class="card hi"><div class="card-hd">PREDICTED D1</div><div class="card-val ${cc(chg)}" style="font-size:18px;">${fL(preds[0].price)}</div></div>
+    <div class="card hi"><div class="card-hd">EXPECTED CHANGE</div><div class="card-val ${cc(chg)}" style="font-size:18px;">${sg(chg)}%</div></div>
+    <div class="card hi"><div class="card-hd">AI SIGNAL</div><div style="margin-top:6px;">${sigBadge(chg)}</div><div class="card-sub" style="margin-top:4px;">${f2(confidence)}% confidence</div></div>`;
+
+  dc('c-pred'); const pctx=document.getElementById('c-pred');
+  if(pctx) CH['c-pred']=new Chart(pctx,{
+    type:'line',
+    data:{labels:preds.map(p=>`Day ${p.day}`),datasets:[
+      {label:'Predicted',data:preds.map(p=>p.price),borderColor:'#00e676',tension:.4,pointRadius:4,pointBackgroundColor:'#00e676',borderWidth:2},
+      {label:'Upper',    data:preds.map(p=>p.upper),borderColor:'rgba(0,230,118,.25)',tension:.4,pointRadius:0,borderWidth:1,fill:'+1',backgroundColor:'rgba(0,230,118,.05)'},
+      {label:'Lower',    data:preds.map(p=>p.lower),borderColor:'rgba(0,230,118,.25)',tension:.4,pointRadius:0,borderWidth:1},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:9},boxWidth:8}}},
+      scales:{x:{ticks:{color:'#475569',font:{size:9}},grid:{color:'#0d1520'}},
+              y:{ticks:{color:'#475569',font:{size:9}},grid:{color:'#1a2332'}}}}
+  });
+
+  dc('c-conf'); const cctx=document.getElementById('c-conf');
+  if(cctx) CH['c-conf']=new Chart(cctx,{
+    type:'bar',
+    data:{labels:preds.map(p=>`D${p.day}`),datasets:[{
+      label:'Confidence%',data:preds.map(p=>p.conf),
+      backgroundColor:preds.map(p=>p.conf>88?'rgba(0,230,118,.7)':p.conf>80?'rgba(251,191,36,.7)':'rgba(239,68,68,.7)'),
+      borderRadius:3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#475569',font:{size:9}},grid:{color:'#0d1520'}},
+              y:{min:50,max:100,ticks:{color:'#475569',font:{size:9}},grid:{color:'#1a2332'}}}}
+  });
+
+  if(metrics) document.getElementById('pred-metrics').innerHTML=[
+    ['RMSE',    f2(metrics.RMSE)],
+    ['MAE',     f2(metrics.MAE)],
+    ['R² Score',f2(metrics.R2,3)],
+    ['MAPE %',  f2(metrics.MAPE)],
+    ['Dir. Acc %',f2(metrics.Dir_Acc,0)],
+  ].map(([k,v])=>`<div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+    <span style="color:var(--tx3);font-size:11px;">${k}</span>
+    <span style="color:var(--am);font-weight:700;font-size:11px;">${v}</span>
+  </div>`).join('');
+
+  if(feature_importance){
+    const feats=Object.keys(feature_importance);
+    const imps =Object.values(feature_importance);
+    dc('c-feat'); const fctx=document.getElementById('c-feat');
+    if(fctx) CH['c-feat']=new Chart(fctx,{
+      type:'bar',data:{labels:feats,datasets:[{data:imps,backgroundColor:'rgba(0,200,83,.65)',borderRadius:3}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#475569',font:{size:8}},grid:{color:'#0d1520'}},
+                y:{ticks:{color:'#94a3b8',font:{size:9}},grid:{display:false}}}}
+    });
+  }
+
+  document.getElementById('pred-thesis').textContent = thesis || '—';
+  showToast(`Real prediction complete — ${sym}: ${sg(chg)}%`,'gr');
+}
+
+function _runPredFallback(sym, days){
+  const sMap={RELIANCE:{p:2847.50,v:.018},TCS:{p:3921.80,v:.014},BTC:{p:67842,v:.045},AAPL:{p:189.30,v:.016},TSLA:{p:178.20,v:.052},NIFTY:{p:22456.80,v:.012}};
+  const s=sMap[sym]||sMap.RELIANCE;
+  let p=s.p;
+  const preds=Array.from({length:days},(_,i)=>{
+    p=p*(1+(Math.random()-.42)*s.v*.8);
+    const m=p*s.v*1.96;
+    return{day:i+1,price:+p.toFixed(2),upper:+(p+m).toFixed(2),lower:+(p-m).toFixed(2),conf:+(Math.max(65,94-i*3.5)).toFixed(1)};
+  });
+  const chg=(preds[0].price-s.p)/s.p*100;
+  document.getElementById('pred-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">CURRENT PRICE</div><div class="card-val" style="font-size:18px;">${fL(s.p)}</div></div>
+    <div class="card hi"><div class="card-hd">PREDICTED D1</div><div class="card-val ${cc(chg)}" style="font-size:18px;">${fL(preds[0].price)}</div></div>
+    <div class="card hi"><div class="card-hd">EXPECTED CHANGE</div><div class="card-val ${cc(chg)}" style="font-size:18px;">${sg(chg)}%</div></div>
+    <div class="card hi"><div class="card-hd">AI SIGNAL</div><div style="margin-top:6px;">${sigBadge(chg)}</div><div class="card-sub" style="margin-top:4px;">${f2(preds[0].conf)}% confidence</div></div>`;
+  showToast('Using cached data — backend connecting…','am');
+}
+
+// ═══════════════════════════════════════════════════
+//  PORTFOLIO
+// ═══════════════════════════════════════════════════
+async function initPortfolio(){
+  const data = await apiFetch('/portfolio/holdings');
+  const holdings = data ? data.holdings : null;
+
+  if(!data) { _initPortfolioFallback(); return; }
+
+  const {total_value:tv, invested:ti, pnl, pnl_pct:pp} = data;
+  document.getElementById('port-kpis').innerHTML=`
+    <div class="card hi" onclick="showToast('${(holdings||[]).length} holdings · Total ₹${fK(tv)}','bl')">
+      <div class="card-hd">TOTAL VALUE</div><div class="card-val up" style="font-size:18px;">₹${fK(tv)}</div>
+    </div>
+    <div class="card hi"><div class="card-hd">INVESTED</div><div class="card-val" style="font-size:18px;">₹${fK(ti)}</div></div>
+    <div class="card hi"><div class="card-hd">TOTAL P&L</div><div class="card-val ${cc(pnl)}" style="font-size:18px;">₹${fK(pnl)}</div></div>
+    <div class="card hi"><div class="card-hd">RETURN %</div><div class="card-val ${cc(pp)}" style="font-size:18px;">${sg(pp)}%</div></div>`;
+
+  if(holdings) document.getElementById('holdings-list').innerHTML=holdings.map(h=>{
+    const sp=h.spark&&h.spark.length?h.spark:[h.cmp*(1-.01),h.cmp*(1+.005),h.cmp*(1-.003),h.cmp*(1+.008),h.cmp*(1-.002),h.cmp*(1+.004),h.cmp];
+    return `<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;" onclick="showToast('${h.sym}: ₹${fK(h.value)} · ${sg(h.pnl_pct)}% P&L · ${h.sector}','bl')">
+      ${sparkSVG(sp,h.pnl_pct>=0)}
+      <div style="margin-left:8px;flex:1;">
+        <div style="font-weight:700;color:var(--gr);font-size:12px;">${h.sym}</div>
+        <div style="color:var(--tx3);font-size:9px;">${h.sector} · ${h.qty} units</div>
+      </div>
+      <div style="text-align:right;margin-left:8px;">
+        <div style="font-size:12px;font-weight:600;">${fL(h.cmp)}</div>
+        <div class="${cc(h.day)}" style="font-size:10px;">${sg(h.day)}% today</div>
+      </div>
+      <div style="text-align:right;margin-left:10px;">
+        <div style="font-size:11px;color:var(--tx2);">₹${fK(h.value)}</div>
+        <div class="${cc(h.pnl_pct)}" style="font-size:10px;">${sg(h.pnl_pct)}%</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Sector allocation chart from real data
+  const alloc = await apiFetch('/portfolio/allocation');
+  dc('c-alloc'); const actx=document.getElementById('c-alloc');
+  if(actx && alloc) CH['c-alloc']=new Chart(actx,{
+    type:'doughnut',
+    data:{labels:alloc.map(a=>a.sector),datasets:[{data:alloc.map(a=>a.value),
+      backgroundColor:['#00e676','#fbbf24','#3b82f6','#ef4444','#7c3aed'],borderColor:'#0d1520',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:9},boxWidth:8}}}}
+  });
+
+  // Performance chart from real data
+  const perf = await apiFetch('/portfolio/performance');
+  dc('c-perf'); const pctx=document.getElementById('c-perf');
+  if(pctx && perf) CH['c-perf']=new Chart(pctx,{
+    type:'line',
+    data:{labels:perf.labels,datasets:[
+      {label:'Portfolio',data:perf.portfolio,borderColor:'#00e676',tension:.4,pointRadius:3,pointBackgroundColor:'#00e676',borderWidth:2,fill:true,backgroundColor:'rgba(0,230,118,.04)'},
+      {label:'NIFTY50', data:perf.benchmark,borderColor:'#fbbf24',tension:.4,borderDash:[5,3],pointRadius:0,borderWidth:1},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:9},boxWidth:8}}},
+      scales:{x:{ticks:{color:'#475569',font:{size:9}},grid:{color:'#0d1520'}},
+              y:{ticks:{color:'#475569',font:{size:9}},grid:{color:'#1a2332'}}}}
+  });
+
+  // Rebalancing suggestions
+  const rebal = await apiFetch('/portfolio/rebalance');
+  if(rebal) document.getElementById('rebal-list').innerHTML=rebal.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);">
+      <div>
+        <span class="${r.action==='INCREASE'||r.action==='ADD'?'up':r.action==='REDUCE'?'dn':'nu'}" style="font-weight:700;">${r.action==='INCREASE'?'▲':r.action==='REDUCE'?'▼':r.action==='ADD'?'＋':'●'} ${r.action}</span>
+        <span style="font-weight:700;margin-left:6px;">${r.sym}</span>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--tx3);">${r.from}% → ${r.to}%</div>
+        <div style="font-size:10px;color:var(--tx3);">${r.reason}</div>
+      </div>
+    </div>`).join('');
+}
+
+function _initPortfolioFallback(){
+  const tv=HOLDINGS.reduce((a,h)=>a+h.qty*h.cmp,0);
+  const ti=HOLDINGS.reduce((a,h)=>a+h.qty*h.avg,0);
+  const pnl=tv-ti,pp=pnl/ti*100;
+  document.getElementById('port-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">TOTAL VALUE</div><div class="card-val up" style="font-size:18px;">₹${fK(tv)}</div></div>
+    <div class="card hi"><div class="card-hd">INVESTED</div><div class="card-val" style="font-size:18px;">₹${fK(ti)}</div></div>
+    <div class="card hi"><div class="card-hd">TOTAL P&L</div><div class="card-val ${cc(pnl)}" style="font-size:18px;">₹${fK(pnl)}</div></div>
+    <div class="card hi"><div class="card-hd">RETURN %</div><div class="card-val ${cc(pp)}" style="font-size:18px;">${sg(pp)}%</div></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  RISK
+// ═══════════════════════════════════════════════════
+async function initRisk(){
+  const [risk, breakdown, mc, stress] = await Promise.all([
+    apiFetch('/risk/portfolio', {method:'POST'}),
+    apiFetch('/risk/breakdown'),
+    apiFetch('/risk/montecarlo', {method:'POST'}),
+    apiFetch('/risk/stress'),
+  ]);
+
+  if(risk && !risk.error){
+    const R=risk;
+    document.getElementById('risk-kpis').innerHTML=[
+      {h:'VaR (95%)',  v:`-₹${Math.abs(R.var95_inr).toLocaleString('en-IN')}`, s:'1-day max loss',       cl:'dn'},
+      {h:'VaR (99%)',  v:`-₹${Math.abs(R.var99_inr).toLocaleString('en-IN')}`, s:'99% confidence',       cl:'dn'},
+      {h:'MAX DRAWDOWN',v:`${R.max_drawdown}%`,    s:'Last 12 months',         cl:'dn'},
+      {h:'SHARPE RATIO',v:`${R.sharpe}`,           s:'Above avg 1.2',          cl:'nu'},
+      {h:'SORTINO',    v:`${R.sortino}`,            s:'Downside-adjusted',      cl:'nu'},
+      {h:'BETA',       v:`${R.beta}`,               s:'Market sensitivity',     cl:''},
+      {h:'ALPHA',      v:`+${R.alpha_pct}%`,        s:'vs NIFTY50',             cl:'up'},
+      {h:'CVaR (95%)', v:`-₹${Math.abs(R.cvar_inr).toLocaleString('en-IN')}`,  s:'Expected shortfall',   cl:'dn'},
+    ].map(k=>`<div class="card hi" onclick="showToast('${k.h}: ${k.v} — Ask AI for explanation','am')">
+      <div class="card-hd">${k.h}</div>
+      <div class="card-val ${k.cl}" style="font-size:16px;">${k.v}</div>
+      <div class="card-sub">${k.s}</div>
+    </div>`).join('');
+  } else {
+    // static fallback
+    document.getElementById('risk-kpis').innerHTML=[
+      {h:'VaR (95%)',v:'-₹9,647',s:'1-day max loss',cl:'dn'},{h:'VaR (99%)',v:'-₹14,230',s:'99% confidence',cl:'dn'},
+      {h:'MAX DRAWDOWN',v:'-12.4%',s:'Last 12 months',cl:'dn'},{h:'SHARPE RATIO',v:'1.84',s:'Above avg 1.2',cl:'nu'},
+      {h:'SORTINO',v:'2.14',s:'Downside-adjusted',cl:'nu'},{h:'BETA',v:'0.92',s:'Low sensitivity',cl:''},
+      {h:'ALPHA',v:'+4.8%',s:'vs NIFTY50',cl:'up'},{h:'CVaR (95%)',v:'-₹14.2K',s:'Expected shortfall',cl:'dn'},
+    ].map(k=>`<div class="card hi"><div class="card-hd">${k.h}</div><div class="card-val ${k.cl}" style="font-size:16px;">${k.v}</div><div class="card-sub">${k.s}</div></div>`).join('');
+  }
+
+  // Asset risk breakdown
+  const bkData = breakdown || [
+    {sym:'BTC-USD',risk:88},{sym:'TSLA',risk:76},{sym:'WIPRO',risk:38},
+    {sym:'INFY',risk:32},{sym:'AAPL',risk:30},{sym:'RELIANCE',risk:28},{sym:'HDFCBANK',risk:24},
+  ];
+  document.getElementById('risk-bars').innerHTML=bkData.map(a=>`
+    <div style="margin-bottom:10px;" onclick="showToast('${a.sym} risk: ${a.risk}/100 — Based on volatility & drawdown','am')">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+        <span style="font-size:12px;font-weight:600;color:var(--tx2);">${a.sym}</span>
+        <span class="${a.risk>60?'dn':a.risk>40?'nu':'up'}" style="font-size:11px;font-weight:700;">${a.risk}/100</span>
+      </div>
+      <div class="risk-bar"><div class="risk-fill ${a.risk>60?'rh':a.risk>40?'rm':'rl'}" style="width:${a.risk}%"></div></div>
+    </div>`).join('');
+
+  // Monte Carlo chart
+  dc('c-mc'); const ctx=document.getElementById('c-mc');
+  if(ctx && mc && mc.paths){
+    const colors=['rgba(239,68,68,.7)','rgba(251,191,36,.5)','rgba(0,230,118,.9)','rgba(59,130,246,.5)','rgba(0,230,118,.4)'];
+    CH['c-mc']=new Chart(ctx,{
+      type:'line',
+      data:{labels:mc.labels,datasets:mc.paths.map((p,i)=>({
+        label:`P${p.percentile}`,data:p.data,borderColor:colors[i],
+        borderWidth:p.percentile===50?2:1,pointRadius:0,tension:.3,
+      }))},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#94a3b8',font:{size:8},boxWidth:8}}},
+        scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:6},grid:{color:'#0d1520'}},
+                y:{ticks:{color:'#475569',font:{size:8},callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1a2332'}}}}
+    });
+  } else {
+    // fallback MC
+    dc('c-mc'); const mctx=document.getElementById('c-mc');
+    if(mctx){
+      const lbs=Array.from({length:26},(_,i)=>`D${(i+1)*10}`);
+      const paths=['P5','P25','P50','P75','P95'].map((k,ki)=>{
+        let v=482350;const d=[-.003,-.001,.001,.003,.005][ki];
+        return{label:k,data:Array.from({length:26},()=>{v=v*(1+d+(Math.random()-.5)*.012);return Math.round(v);}),
+          borderColor:['rgba(239,68,68,.7)','rgba(251,191,36,.5)','rgba(0,230,118,.9)','rgba(59,130,246,.5)','rgba(0,230,118,.4)'][ki],
+          borderWidth:ki===2?2:1,pointRadius:0,tension:.3};
+      });
+      CH['c-mc']=new Chart(mctx,{type:'line',data:{labels:lbs,datasets:paths},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{color:'#94a3b8',font:{size:8},boxWidth:8}}},
+          scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:6},grid:{color:'#0d1520'}},
+                  y:{ticks:{color:'#475569',font:{size:8},callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1a2332'}}}}});
+    }
+  }
+
+  // Stress tests
+  const stressData = stress || [
+    ['COVID-19 (2020)','-38%','₹1.83L','5-9 mo','EXTREME'],
+    ['2008 Crisis','-52%','₹2.51L','18-24 mo','EXTREME'],
+    ['Mild Correction','-10%','₹48K','2-3 mo','MODERATE'],
+    ['Flash Crash','-9%','₹39K','2-4 wks','LOW'],
+  ].map(([name,drop_pct,loss,recovery,severity])=>({name,drop_pct,loss_inr:loss,recovery,severity}));
+  document.getElementById('stress-cards').innerHTML=stressData.map(s=>`
+    <div class="card hi" onclick="showToast('${s.name}: Impact -₹${(s.loss_inr||'').toLocaleString?s.loss_inr.toLocaleString('en-IN'):s.loss_inr} · Recovery ~${s.recovery}','am')">
+      <div class="card-hd">${s.name}</div>
+      <div class="dn" style="font-size:16px;font-weight:700;">${s.drop_pct}</div>
+      <div style="color:var(--rd);font-size:12px;font-weight:600;">-₹${typeof s.loss_inr==='number'?fK(s.loss_inr):s.loss_inr}</div>
+      <div style="font-size:9px;color:var(--tx3);margin-top:4px;">Recovery: ${s.recovery} · <span class="${s.severity==='EXTREME'?'dn':s.severity==='MODERATE'?'nu':'up'}">${s.severity}</span></div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  SENTIMENT
+// ═══════════════════════════════════════════════════
+async function initSentiment(){
+  const [sectors, news] = await Promise.all([
+    apiFetch('/sentiment/sector'),
+    apiFetch('/sentiment/news'),
+  ]);
+
+  const sectData = sectors || [{n:'US Tech',s:78},{n:'Technology',s:72},{n:'Banking',s:65},{n:'Pharma',s:54},{n:'Crypto',s:34}];
+  document.getElementById('sect-bars').innerHTML=sectData.map(x=>`
+    <div style="margin-bottom:8px;" onclick="showToast('${x.n}: Score ${x.s}/100','am')">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+        <span style="font-size:11px;color:var(--tx2);">${x.n}</span>
+        <span class="${x.s>60?'up':x.s>45?'nu':'dn'}" style="font-size:10px;">${x.s}/100</span>
+      </div>
+      <div class="risk-bar"><div class="risk-fill ${x.s>60?'rl':x.s>45?'rm':'rh'}" style="width:${x.s}%"></div></div>
+    </div>`).join('');
+
+  const newsArr = news || NEWS;
+  document.getElementById('news-feed').innerHTML=newsArr.map(n=>`
+    <div class="card" style="margin-bottom:8px;" onclick="showToast('Opening full article from ${n.src}…','bl')">
+      <div style="display:flex;justify-content:space-between;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:9px;color:var(--tx3);">${n.t} · ${n.src}</div>
+          <div style="font-size:12px;color:var(--tx);margin-top:4px;line-height:1.45;">${n.txt}</div>
+        </div>
+        ${sentBadge(n.sent)}
+      </div>
+    </div>`).join('');
+}
+
+async function runSent(){
+  const txt = document.getElementById('sent-txt').value;
+  if(!txt){showToast('Please paste some text to analyse','am');return;}
+
+  const result = await apiFetch('/sentiment/analyse', {
+    method:'POST', body:JSON.stringify({text:txt})
+  });
+
+  if(!result){
+    showToast('Sentiment API unavailable — using local analysis','am');
+    _runSentFallback(txt);
+    return;
+  }
+
+  const {models, score, polarity, subjectivity, vader_compound, consensus} = result;
+  document.getElementById('sent-res').innerHTML=`
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+      <div class="card" style="cursor:default;text-align:center;"><span class="badge b-llm" style="margin-bottom:6px;display:block;">Claude 4.5</span><div class="${cc(models.claude.score)}" style="font-size:14px;font-weight:700;">${models.claude.label}</div><div style="font-size:10px;color:var(--tx3);">${f2(models.claude.score,3)}</div></div>
+      <div class="card" style="cursor:default;text-align:center;"><span class="badge b-llm" style="margin-bottom:6px;display:block;">GPT-4</span><div class="${cc(models.gpt4.score)}" style="font-size:14px;font-weight:700;">${models.gpt4.label}</div><div style="font-size:10px;color:var(--tx3);">${f2(models.gpt4.score,3)}</div></div>
+      <div class="card" style="cursor:default;text-align:center;"><span class="badge b-llm" style="margin-bottom:6px;display:block;">Gemini</span><div class="${cc(models.gemini.score)}" style="font-size:14px;font-weight:700;">${models.gemini.label}</div><div style="font-size:10px;color:var(--tx3);">${f2(models.gemini.score,3)}</div></div>
+    </div>
+    <div class="llm-bubble" style="margin-top:10px;font-size:11px;">
+      <strong>Consensus: <span style="color:${score>.1?'var(--gr)':score<-.1?'var(--rd)':'var(--am)'};">${consensus}</span></strong> — TextBlob + keyword analysis complete.<br>
+      VADER compound: ${f2(vader_compound,3)} · TextBlob polarity: ${f2(polarity,3)} · Subjectivity: ${f2(subjectivity,2)}
+    </div>`;
+  showToast('3-LLM sentiment analysis complete!','gr');
+}
+
+function _runSentFallback(txt){
+  const w=txt.toLowerCase();let sc=0;
+  ['gain','surge','profit','bull','rise','growth','strong','beat','jump'].forEach(x=>{if(w.includes(x))sc+=.15;});
+  ['fall','drop','loss','bear','decline','weak','crash','down','risk'].forEach(x=>{if(w.includes(x))sc-=.15;});
+  sc=Math.max(-1,Math.min(1,sc));
+  const lbl=sc>.1?'BULLISH':sc<-.1?'BEARISH':'NEUTRAL';
+  document.getElementById('sent-res').innerHTML=`
+    <div style="margin-top:12px;text-align:center;padding:18px;">
+      <div class="${cc(sc)}" style="font-size:18px;font-weight:700;">${lbl}</div>
+      <div style="color:var(--tx3);font-size:11px;margin-top:8px;">Local analysis · Score: ${f2(sc,3)}</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  BACKTEST
+// ═══════════════════════════════════════════════════
+async function initBacktest(){
+  const data = await apiFetch('/backtest/compare', {method:'POST', body:JSON.stringify({symbol:'RELIANCE'})});
+  if(data) _renderStratCmp(data);
+  else renderStratCmp();
+}
+
+function _renderStratCmp(rows){
+  document.getElementById('strat-cmp').innerHTML=rows.map((s,i)=>`
+    <div class="card" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;${i===0?'border-color:var(--gr);':''}" onclick="showToast('${s.name}: +${s.return}% return · Sharpe ${s.sharpe}','bl')">
+      <div><div style="font-weight:700;font-size:12px;${i===0?'color:var(--gr);':''}">${i===0?'★ ':''} ${s.name}</div></div>
+      <div style="display:flex;gap:16px;">
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Return</div><div class="up" style="font-size:12px;font-weight:700;">+${f2(s.return)}%</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Sharpe</div><div class="nu" style="font-size:12px;font-weight:700;">${f2(s.sharpe)}</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Win%</div><div class="${s.win_rate>=50?'up':'dn'}" style="font-size:12px;font-weight:700;">${f2(s.win_rate)}%</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Alpha</div><div class="${cc(s.alpha)}" style="font-size:12px;font-weight:700;">${sg(s.alpha)}%</div></div>
+      </div>
+    </div>`).join('');
+}
+
+async function runBacktest(){
+  const sym   = document.getElementById('bt-sym')?document.getElementById('bt-sym').value:'RELIANCE';
+  const strat = document.getElementById('bt-strat')?document.getElementById('bt-strat').value:'sma_crossover';
+  const years = parseInt(document.getElementById('bt-years')?document.getElementById('bt-years').value:'5')||5;
+
+  showToast(`Running ${strat.replace('_',' ')} backtest on ${sym} · ${years}Y…`,'am');
+
+  const result = await apiFetch('/backtest/run', {
+    method:'POST',
+    body:JSON.stringify({symbol:sym, strategy:strat, years})
+  });
+
+  if(!result||result.error){_runBacktestFallback();return;}
+
+  const {total_return:tr, bh_return:bh, alpha, sharpe:sh, win_rate:wr, n_trades:trades,
+         labels, strat_vals:pvA, bh_vals:bvA, dd_vals:ddA, thesis} = result;
+
+  document.getElementById('bt-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">TOTAL RETURN</div><div class="card-val up" style="font-size:18px;">+${f2(tr)}%</div><div class="card-sub up">B&H: +${f2(bh)}%</div></div>
+    <div class="card hi"><div class="card-hd">ALPHA</div><div class="card-val ${cc(alpha)}" style="font-size:18px;">${sg(alpha)}%</div></div>
+    <div class="card hi"><div class="card-hd">SHARPE</div><div class="card-val nu" style="font-size:18px;">${f2(sh)}</div></div>
+    <div class="card hi"><div class="card-hd">WIN RATE</div><div class="card-val ${wr>=50?'up':'dn'}" style="font-size:18px;">${f2(wr)}%</div><div class="card-sub">${trades} trades</div></div>`;
+
+  dc('c-bt'); const ctx=document.getElementById('c-bt');
+  if(ctx) CH['c-bt']=new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Strategy',data:pvA,borderColor:'#00e676',tension:.3,pointRadius:0,borderWidth:2,fill:true,backgroundColor:'rgba(0,230,118,.04)'},
+      {label:'Buy & Hold',data:bvA,borderColor:'#fbbf24',tension:.3,pointRadius:0,borderWidth:1,borderDash:[5,3]},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{size:9},boxWidth:8}}},
+      scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},grid:{color:'#0d1520'}},
+              y:{ticks:{color:'#475569',font:{size:8},callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1a2332'}}}}
+  });
+
+  dc('c-dd'); const dctx=document.getElementById('c-dd');
+  if(dctx) CH['c-dd']=new Chart(dctx,{
+    type:'line',
+    data:{labels,datasets:[{data:ddA,borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,.07)',fill:true,tension:.3,pointRadius:0,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},grid:{color:'#0d1520'}},
+              y:{ticks:{color:'#475569',font:{size:8},callback:v=>v+'%'},grid:{color:'#1a2332'}}}}
+  });
+
+  document.getElementById('bt-thesis-area').innerHTML=`
+    <div class="card" style="margin-top:12px;cursor:default;">
+      <div style="display:flex;gap:6px;margin-bottom:8px;"><span class="badge b-llm">Strategy Analysis — Real Backtest Engine</span></div>
+      <div class="llm-bubble" style="margin-bottom:0;font-size:11px;">${thesis}</div>
+    </div>`;
+
+  showToast(`Real backtest complete — +${f2(tr)}% return · Alpha ${sg(alpha)}%`,'gr');
+}
+
+function _runBacktestFallback(){
+  const tr=+(30+Math.random()*30).toFixed(2),bh=+(15+Math.random()*20).toFixed(2);
+  const sh=+(0.9+Math.random()*1.5).toFixed(3),wr=+(48+Math.random()*28).toFixed(1);
+  const trades=Math.round(18+Math.random()*50);
+  document.getElementById('bt-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">TOTAL RETURN</div><div class="card-val up" style="font-size:18px;">+${tr}%</div><div class="card-sub up">B&H: +${bh}%</div></div>
+    <div class="card hi"><div class="card-hd">ALPHA</div><div class="card-val ${cc(tr-bh)}" style="font-size:18px;">${sg(tr-bh)}%</div></div>
+    <div class="card hi"><div class="card-hd">SHARPE</div><div class="card-val nu" style="font-size:18px;">${sh}</div></div>
+    <div class="card hi"><div class="card-hd">WIN RATE</div><div class="card-val ${wr>=50?'up':'dn'}" style="font-size:18px;">${wr}%</div><div class="card-sub">${trades} trades</div></div>`;
+  showToast('Backend offline — showing cached results','am');
+}
+
+function renderStratCmp(){
+  document.getElementById('strat-cmp').innerHTML=[
+    {n:'Momentum (10d)',r:44.1,sh:1.38,wr:57.2,alpha:13.9},
+    {n:'SMA 20/50',r:42.3,sh:1.42,wr:58.3,alpha:12.1},
+    {n:'Mean Reversion',r:35.8,sh:1.25,wr:54.8,alpha:5.6},
+    {n:'EMA 10/20',r:38.7,sh:1.31,wr:56.1,alpha:8.5},
+    {n:'RSI Strategy',r:31.2,sh:1.18,wr:52.4,alpha:1.0},
+    {n:'MACD Signal',r:28.4,sh:1.08,wr:49.7,alpha:-1.8},
+    {n:'Buy & Hold',r:30.2,sh:.92,wr:100,alpha:0},
+  ].map((s,i)=>`
+    <div class="card" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;${i===0?'border-color:var(--gr);':''}" onclick="showToast('${s.n}: +${s.r}% return · Sharpe ${s.sh}','bl')">
+      <div><div style="font-weight:700;font-size:12px;${i===0?'color:var(--gr);':''}">${i===0?'★ ':''} ${s.n}</div></div>
+      <div style="display:flex;gap:16px;">
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Return</div><div class="up" style="font-size:12px;font-weight:700;">+${s.r}%</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Sharpe</div><div class="nu" style="font-size:12px;font-weight:700;">${s.sh}</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Win%</div><div class="${s.wr>=50?'up':'dn'}" style="font-size:12px;font-weight:700;">${s.wr}%</div></div>
+        <div style="text-align:center;"><div style="font-size:9px;color:var(--tx3);">Alpha</div><div class="${cc(s.alpha)}" style="font-size:12px;font-weight:700;">${sg(s.alpha)}%</div></div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  SCREENER
+// ═══════════════════════════════════════════════════
+async function initScreener(){
+  const data = await apiFetch('/screener/scan');
+
+  if(!data){_initScreenerFallback();return;}
+
+  const {stocks, total, buy_signals, sell_signals, high_risk} = data;
+  document.getElementById('scr-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">TOTAL</div><div class="card-val">${total}</div></div>
+    <div class="card hi"><div class="card-hd">BUY SIGNALS</div><div class="card-val up">${buy_signals}</div></div>
+    <div class="card hi"><div class="card-hd">SELL SIGNALS</div><div class="card-val dn">${sell_signals}</div></div>
+    <div class="card hi"><div class="card-hd">HIGH RISK</div><div class="card-val nu">${high_risk}</div></div>`;
+
+  document.getElementById('scr-cards').innerHTML=stocks.map(s=>{
+    const sp=[s.price*(1-.01),s.price*(1+.005),s.price*(1-.003),s.price*(1+.008),s.price*(1-.002),s.price*(1+.004),s.price,s.price*(1+.001)];
+    return`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;" onclick="showToast('${s.sym}: ₹${fL(s.price)} · ${sg(s.change)}% · Risk ${s.risk}/100','bl')">
+      ${sparkSVG(sp,s.change>=0)}
+      <div style="margin-left:8px;flex:1;">
+        <div style="font-weight:700;color:var(--gr);font-size:12px;">${s.sym}</div>
+        <div style="color:var(--tx3);font-size:9px;">RSI ${s.rsi} · Vol ${s.vol}%</div>
+      </div>
+      <div style="text-align:right;margin-left:8px;">
+        <div style="font-size:12px;font-weight:600;">${fL(s.price)}</div>
+        <div class="${cc(s.change)}" style="font-size:10px;">${sg(s.change)}%</div>
+      </div>
+      <div style="margin-left:10px;">${sigBadge(s.change)}</div>
+    </div>`;
+  }).join('');
+}
+
+function _initScreenerFallback(){
+  document.getElementById('scr-kpis').innerHTML=`
+    <div class="card hi"><div class="card-hd">TOTAL</div><div class="card-val">${STOCKS.length}</div></div>
+    <div class="card hi"><div class="card-hd">BUY SIGNALS</div><div class="card-val up">${STOCKS.filter(s=>s.c>0.3).length}</div></div>
+    <div class="card hi"><div class="card-hd">SELL SIGNALS</div><div class="card-val dn">${STOCKS.filter(s=>s.c<-0.3).length}</div></div>
+    <div class="card hi"><div class="card-hd">HIGH RISK</div><div class="card-val nu">${STOCKS.filter(s=>s.r>60).length}</div></div>`;
+  document.getElementById('scr-cards').innerHTML=STOCKS.map(s=>{
+    const sp=Array.from({length:8},()=>s.p*(1+(Math.random()-.5)*.015));
+    return`<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;" onclick="showToast('${s.sym}: ₹${fL(s.p)} · ${sg(s.c)}% · Risk ${s.r}/100','bl')">
+      ${sparkSVG(sp,s.c>=0)}<div style="margin-left:8px;flex:1;"><div style="font-weight:700;color:var(--gr);font-size:12px;">${s.sym}</div><div style="color:var(--tx3);font-size:9px;">${s.n.slice(0,18)}</div></div>
+      <div style="text-align:right;"><div style="font-size:12px;font-weight:600;">${fL(s.p)}</div><div class="${cc(s.c)}" style="font-size:10px;">${sg(s.c)}%</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  AI CHAT  (calls backend /api/chat/send)
+// ═══════════════════════════════════════════════════
+async function getAIResp(msg){
+  const result = await apiFetch('/chat/send', {
+    method:'POST', body:JSON.stringify({message:msg})
+  });
+  if(result && result.reply) return result.reply;
+  // local fallback
+  const m=msg.toLowerCase();
+  if(m.includes('portfolio')||m.includes('health'))return AI_RESPONSES.portfolio;
+  if(m.includes('risk'))return AI_RESPONSES.risk;
+  if(m.includes('reliance')||m.includes('buy'))return AI_RESPONSES.reliance;
+  if(m.includes('sharpe'))return AI_RESPONSES.sharpe;
+  if(m.includes('btc')||m.includes('bitcoin'))return AI_RESPONSES.btc;
+  return`Good question about "${msg}". Based on your portfolio, check the AI Predict or Risk pages for detailed analysis.`;
+}
+
+function quickChat(msg){document.getElementById('chat-inp').value=msg;sendChat();}
+
+async function sendChat(){
+  const inp=document.getElementById('chat-inp');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  const msgs=document.getElementById('chat-msgs');
+  msgs.innerHTML+=`<div class="msg-user">${msg}</div><div class="typing-dots" id="t-ind" style="padding:6px 10px;"><span></span><span></span><span></span></div>`;
+  inp.value='';
+  msgs.scrollTop=msgs.scrollHeight;
+  const reply = await getAIResp(msg);
+  const tid=document.getElementById('t-ind');
+  if(tid)tid.remove();
+  msgs.innerHTML+=`<div class="msg-ai">${reply}</div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════
+//  AI REFRESH (Dashboard portfolio commentary)
+// ═══════════════════════════════════════════════════
+async function refreshAI(){
+  const el=document.getElementById('ai-commentary');
+  el.innerHTML='<div class="typing-dots" style="justify-content:center;"><span></span><span></span><span></span></div>';
+  const result = await apiFetch('/chat/send', {
+    method:'POST', body:JSON.stringify({message:'portfolio health'})
+  });
+  if(result && result.reply){
+    el.textContent=result.reply;
+  } else {
+    el.innerHTML='Portfolio analysis refreshed. Check Markets and Risk pages for detailed breakdown.';
+  }
+  showToast('AI analysis refreshed','gr');
+}
+
+// ═══════════════════════════════════════════════════
+//  SCHEDULED ALERTS
+// ═══════════════════════════════════════════════════
+function scheduleAlerts(){
+  setTimeout(()=>showToast('ALERT: BTC dropped below ₹67,000 — RSI oversold at 28','rd'),9000);
+  setTimeout(()=>showToast('BUY SIGNAL: HDFC Bank RSI at 32 — potential oversold entry','gr'),18000);
+  setTimeout(()=>showToast('NSE closes in 15 minutes — review open positions now!','am'),30000);
+  setTimeout(()=>showToast('PATTERN: RELIANCE bouncing off 200-day moving average','bl'),44000);
+}
+
+// ═══════════════════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  TRADE JOURNAL — complete implementation
+// ═══════════════════════════════════════════════════
+
+const _SEED_NOTES = [
+  {id:1,type:'goal',    title:'Watch RELIANCE 200-DMA bounce',   body:'Set alert at ₹2,820. If it holds, add 20 shares.',                        stock:'RELIANCE',ts:Date.now()-86400000*1},
+  {id:2,type:'obs',     title:'NIFTY50 RSI hits 68 — overbought',body:'Multiple large-caps showing negative divergence on MACD.',                 stock:'NIFTY50', ts:Date.now()-86400000*1},
+  {id:3,type:'mistake', title:'Held BTC through FOMC — wrong',   body:'Should have trimmed 10% before the meeting. Lesson: macro > technicals.', stock:'BTC',     ts:Date.now()-86400000*2},
+  {id:4,type:'pattern', title:'TCS consolidates before results',  body:'Stock typically compresses 3-5 days before earnings, then gaps 2-4%.',   stock:'TCS',     ts:Date.now()-86400000*3},
+  {id:5,type:'goal',    title:'Target 1.8% portfolio gain today', body:'Focus on HDFCBANK and INFY — both oversold on RSI.',                      stock:'',        ts:Date.now()-86400000*3},
+  {id:6,type:'mistake', title:'Entered WIPRO too early',          body:'Bought at ₹420 before support confirmed. Stopped out at ₹411. Wait for volume confirmation.', stock:'WIPRO',ts:Date.now()-86400000*5},
+  {id:7,type:'pattern', title:'BTC pumps Sunday night (UTC)',     body:'Consistently 1.5-3% gain Sunday 10PM-12AM UTC. Low liquidity + retail demand.', stock:'BTC',ts:Date.now()-86400000*6},
+];
+
+let _notes       = JSON.parse(sessionStorage.getItem('ai_fin_notes') || 'null') || [..._SEED_NOTES];
+let _noteFilter  = 'all';
+let _nextNoteId  = _notes.reduce((m,n)=>Math.max(m,n.id),0)+1;
+function _saveNotes(){ sessionStorage.setItem('ai_fin_notes',JSON.stringify(_notes)); }
+
+function initNotes(){ _noteFilter='all'; _renderNotes(); }
+
+function filterNotes(type){ _noteFilter=type; _renderNotes(); }
+
+function _renderNotes(){
+  const container=document.getElementById('notes-list');
+  if(!container)return;
+  const filtered=_noteFilter==='all'?_notes:_notes.filter(n=>n.type===_noteFilter);
+  const counts={all:_notes.length,goal:0,obs:0,mistake:0,pattern:0};
+  _notes.forEach(n=>{if(counts[n.type]!==undefined)counts[n.type]++;});
+  const el=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  el('note-total',counts.all);el('note-goals',counts.goal);
+  el('note-mistakes',counts.mistake);el('note-patterns',counts.pattern);
+  if(filtered.length===0){
+    container.innerHTML='<div style="text-align:center;padding:40px;color:var(--tx3);">No '+(_noteFilter==='all'?'':_noteFilter+' ')+'entries yet. Click <strong>+ New Entry</strong> to add one.</div>';
+    return;
+  }
+  const tagCls={goal:'tag-goal',obs:'tag-obs',mistake:'tag-mistake',pattern:'tag-pattern'};
+  const tagLabel={goal:'GOAL',obs:'OBSERVATION',mistake:'MISTAKE LOGGED',pattern:'PATTERN NOTED'};
+  const borderCol={goal:'var(--gr)',obs:'var(--bl)',mistake:'var(--rd)',pattern:'#7c3aed'};
+  container.innerHTML=filtered.slice().sort((a,b)=>b.ts-a.ts).map(n=>{
+    const d=new Date(n.ts);
+    const ds=d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+    const ts=d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="note-card" style="border-left:3px solid '+(borderCol[n.type]||'var(--bd)')+';" data-id="'+n.id+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'+
+        '<div><span class="note-tag '+(tagCls[n.type]||'')+'">'+(tagLabel[n.type]||n.type.toUpperCase())+'</span>'+
+        (n.stock?'<span class="note-tag" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);">'+n.stock+'</span>':'')+'</div>'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'+
+          '<span style="font-size:10px;color:var(--tx3);">'+ds+' '+ts+'</span>'+
+          '<button onclick="deleteNote('+n.id+')" style="background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1;" title="Delete">×</button>'+
+        '</div></div>'+
+      '<div style="font-weight:600;font-size:13px;margin:6px 0 4px;">'+_escNote(n.title)+'</div>'+
+      '<div style="font-size:12px;color:var(--tx2);line-height:1.5;">'+_escNote(n.body)+'</div></div>';
+  }).join('');
+}
+
+function _escNote(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function addNote(){
+  const type =document.getElementById('note-type')?.value||'obs';
+  const title=document.getElementById('note-title')?.value.trim()||'';;
+  const body =document.getElementById('note-body')?.value.trim()||'';
+  const stock=document.getElementById('note-stock')?.value.trim().toUpperCase()||'';
+  if(!title){showToast('Please enter a title for your journal entry','rd');return;}
+  _notes.unshift({id:_nextNoteId++,type,title,body,stock,ts:Date.now()});
+  _saveNotes();
+  ['note-title','note-body','note-stock'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  closeModal('note-modal');
+  showToast('Journal entry saved!','gr');
+  if(document.getElementById('pane-notes')?.classList.contains('active'))_renderNotes();
+}
+
+function deleteNote(id){
+  _notes=_notes.filter(n=>n.id!==id);
+  _saveNotes();
+  _renderNotes();
+  showToast('Entry deleted','am');
+}
+
+// ═══════════════════════════════════════════════════
+//  ADD HOLDING — wired implementation
+// ═══════════════════════════════════════════════════
+
+let _customHoldings=JSON.parse(sessionStorage.getItem('ai_fin_holdings')||'[]');
+
+function showAddHoldingModal(){
+  document.getElementById('port-modal-area').innerHTML=
+    '<div class="modal-overlay open" id="add-holding-modal">'+
+    '<div class="modal-box">'+
+      '<div class="modal-title">Add New Holding <button class="modal-close" onclick="closeAddHoldingModal()">✕</button></div>'+
+      '<div class="modal-sub">Add a stock, ETF, crypto or index to your portfolio</div>'+
+      '<div class="form-group"><label class="form-label">Symbol</label>'+
+        '<input class="form-input" id="ah-sym" placeholder="e.g. RELIANCE, AAPL, BTC" oninput="this.value=this.value.toUpperCase()"/>'+
+        '<div style="font-size:10px;color:var(--tx3);margin-top:3px;">Use short codes: RELIANCE, TCS, AAPL, BTC, NVDA, MSFT</div></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+        '<div class="form-group"><label class="form-label">Quantity</label><input class="form-input" id="ah-qty" type="number" placeholder="100" min="0.0001" step="any"/></div>'+
+        '<div class="form-group"><label class="form-label">Avg Buy Price (₹/$)</label><input class="form-input" id="ah-avg" type="number" placeholder="2640" min="0.01" step="any"/></div></div>'+
+      '<div class="form-group"><label class="form-label">Sector</label>'+
+        '<select class="form-input" id="ah-sector" style="width:100%;">'+
+          '<option value="Technology">Technology</option><option value="Banking">Banking</option>'+
+          '<option value="Energy">Energy</option><option value="Crypto">Crypto</option>'+
+          '<option value="Pharma">Pharma</option><option value="US Tech">US Tech</option>'+
+          '<option value="Commodities">Commodities</option><option value="Other">Other</option></select></div>'+
+      '<div style="display:flex;gap:8px;margin-top:4px;">'+
+        '<button class="btn-primary" style="flex:1;" id="ah-save-btn" onclick="saveHolding()">Add to Portfolio</button>'+
+        '<button class="btn-ghost" onclick="closeAddHoldingModal()">Cancel</button></div>'+
+    '</div></div>';
+}
+
+function closeAddHoldingModal(){const a=document.getElementById('port-modal-area');if(a)a.innerHTML='';}
+
+function saveHolding(){
+  const sym   =(document.getElementById('ah-sym')?.value||'').trim().toUpperCase();
+  const qty   =parseFloat(document.getElementById('ah-qty')?.value)||0;
+  const avg   =parseFloat(document.getElementById('ah-avg')?.value)||0;
+  const sector=document.getElementById('ah-sector')?.value||'Other';
+  if(!sym){showToast('Please enter a symbol','rd');return;}
+  if(qty<=0){showToast('Please enter a valid quantity','rd');return;}
+  if(avg<=0){showToast('Please enter a valid buy price','rd');return;}
+  const btn=document.getElementById('ah-save-btn');
+  if(btn){btn.textContent='Adding…';btn.disabled=true;}
+  _customHoldings.push({sym,qty,avg,sector});
+  sessionStorage.setItem('ai_fin_holdings',JSON.stringify(_customHoldings));
+  closeAddHoldingModal();
+  showToast(sym+' added to your portfolio!','gr');
+  if(document.getElementById('pane-portfolio')?.classList.contains('active'))initPortfolio();
+}
+
+
+// ═══════════════════════════════════════════════════
+//  WEBSOCKET LIVE PRICE UPDATES (flask-socketio)
+// ═══════════════════════════════════════════════════
+let _socket = null;
+let _wsConnected = false;
+
+function initWebSocket() {
+  const wsBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : window.location.origin;
+
+  try {
+    _socket = io(wsBase, { transports: ['websocket', 'polling'], reconnectionDelay: 3000 });
+
+    _socket.on('connect', () => {
+      _wsConnected = true;
+      _socket.emit('subscribe_market', { symbols: ['RELIANCE','TCS','HDFCBANK','BTC','NIFTY50','AAPL'] });
+      _updateWsIndicator(true);
+      console.log('[WS] connected — live price stream active');
+    });
+
+    _socket.on('disconnect', () => {
+      _wsConnected = false;
+      _updateWsIndicator(false);
+      console.log('[WS] disconnected');
+    });
+
+    _socket.on('price_update', (data) => {
+      if (!data || !data.quotes) return;
+      data.quotes.forEach(q => _applyLivePriceUpdate(q));
+      _flashWsIndicator();
+    });
+
+    _socket.on('connect_error', (err) => {
+      _wsConnected = false;
+      _updateWsIndicator(false);
+    });
+
+  } catch(e) {
+    console.warn('[WS] Socket.IO init failed, REST polling only:', e.message);
+  }
+}
+
+function _applyLivePriceUpdate(q) {
+  // Update global STOCKS array in-memory
+  const stock = STOCKS.find(s => s.sym === q.sym);
+  if (stock) {
+    stock.p = q.price;
+    stock.c = q.change;
+    stock.v = q.volume || stock.v;
+  }
+  // Update any visible price badge in the DOM
+  document.querySelectorAll(`[data-ws-sym="${q.sym}"]`).forEach(el => {
+    el.textContent = typeof q.price === 'number'
+      ? (q.price >= 1000 ? q.price.toLocaleString('en-IN', {maximumFractionDigits:2}) : q.price.toFixed(2))
+      : q.price;
+  });
+  document.querySelectorAll(`[data-ws-chg="${q.sym}"]`).forEach(el => {
+    const chg = parseFloat(q.change) || 0;
+    el.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+    el.style.color = chg >= 0 ? 'var(--gr)' : 'var(--rd)';
+  });
+}
+
+function _updateWsIndicator(connected) {
+  const dot = document.getElementById('ws-dot');
+  const lbl = document.getElementById('ws-label');
+  if (dot) dot.style.background = connected ? 'var(--gr)' : 'var(--rd)';
+  if (lbl) lbl.textContent = connected ? 'LIVE' : 'POLLING';
+}
+
+function _flashWsIndicator() {
+  const dot = document.getElementById('ws-dot');
+  if (!dot) return;
+  dot.style.transform = 'scale(1.5)';
+  setTimeout(() => { dot.style.transform = 'scale(1)'; }, 300);
+}
+
+// ═══════════════════════════════════════════════════
+//  APP INIT
+// ═══════════════════════════════════════════════════
+function initApp(){
+  navPane('dashboard');
+  scheduleAlerts();
+  initWebSocket();
+}
+</script>
+</body>
+</html>

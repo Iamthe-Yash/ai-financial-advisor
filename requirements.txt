@@ -1,0 +1,20 @@
+flask==3.0.3
+flask-cors==4.0.1
+gunicorn==22.0.0
+
+# Data
+yfinance==0.2.38
+pandas==2.2.2
+numpy==1.26.4
+scipy==1.13.0
+
+# ML
+scikit-learn==1.4.2
+xgboost==2.0.3
+
+# NLP
+textblob==0.18.0
+
+# Utilities
+requests==2.31.0
+python-dotenv==1.0.1
