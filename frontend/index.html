@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AI Financial Advisor Pro</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -1880,32 +1883,93 @@ function setTF(tf){
   drawMACD();
 }
 
+function _renderCandleChart(sym, rows){
+  dc('c-candle');
+  const wrap=document.getElementById('candle-wrap');
+  if(!wrap) return;
+  wrap.innerHTML='<canvas id="c-candle" style="width:100%;height:100%;"></canvas>';
+  const ctx=document.getElementById('c-candle');
+  if(!ctx) return;
+
+  // Build OHLC data points for financial chart
+  const ohlc = rows.map(r=>({
+    x: new Date(r.t).getTime(),
+    o: Number(r.o||r.open||r.c||0),
+    h: Number(r.h||r.high||r.c||0),
+    l: Number(r.l||r.low||r.c||0),
+    c: Number(r.c||r.close||0)
+  })).filter(d=>d.c>0);
+
+  if(!ohlc.length) return;
+
+  CH['c-candle']=new Chart(ctx,{
+    type:'candlestick',
+    data:{datasets:[{
+      label: sym,
+      data: ohlc,
+      color:{
+        up:   '#00e676',
+        down: '#ef4444',
+        unchanged: '#94a3b8'
+      },
+      borderColor:{
+        up:   '#00e676',
+        down: '#ef4444',
+        unchanged: '#94a3b8'
+      }
+    }]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label: i=>{
+              const d=i.raw;
+              return [`O: ${Number(d.o).toLocaleString()}`,
+                      `H: ${Number(d.h).toLocaleString()}`,
+                      `L: ${Number(d.l).toLocaleString()}`,
+                      `C: ${Number(d.c).toLocaleString()}`];
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          type:'time',
+          time:{unit:'day',tooltipFormat:'MMM dd yyyy'},
+          ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},
+          grid:{color:'#0d1520'}
+        },
+        y:{
+          ticks:{color:'#475569',font:{size:8},
+            callback: v=>Number(v).toLocaleString()
+          },
+          grid:{color:'#1a2332'}
+        }
+      }
+    }
+  });
+}
+
 async function drawCandle(sym){
   _tfSym=sym;
   const el=document.getElementById('tf-active-sym');
   if(el) el.textContent=sym;
   const period=TF_PERIOD_MAP[_tfPeriod]||'3mo';
-  const data = await apiFetch(`/market/candles/${sym}?period=${period}`);
-  const rows = data || _generateFallbackCandles(sym);
-  dc('c-candle');
-  const ctx=document.getElementById('c-candle');
-  if(!ctx) return;
-  const labels= rows.map(r=>r.t);
-  const closes= rows.map(r=>r.c);
-  const up    = closes[closes.length-1] >= closes[0];
-  CH['c-candle']=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[{
-      label:sym,data:closes,
-      borderColor:up?'#00e676':'#ef4444',
-      backgroundColor:up?'rgba(0,230,118,.06)':'rgba(239,68,68,.06)',
-      tension:.3,pointRadius:0,fill:true,borderWidth:2
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`₹${Number(i.raw).toLocaleString()}`}}},
-      scales:{x:{ticks:{color:'#475569',font:{size:8},maxTicksLimit:8},grid:{color:'#0d1520'}},
-              y:{ticks:{color:'#475569',font:{size:8}},grid:{color:'#1a2332'}}}}
-  });
+
+  // Show fallback immediately so chart is never blank
+  _renderCandleChart(sym, _generateFallbackCandles(sym));
+
+  // Try API — use longer fallback period to ensure data even when market closed
+  const apiPeriod = period==='5d' ? '1mo' : period;
+  try {
+    const data = await apiFetch(`/market/candles/${sym}?period=${apiPeriod}`);
+    if(data && Array.isArray(data) && data.length > 0){
+      _renderCandleChart(sym, data);
+    }
+  } catch(e){ /* keep fallback */ }
 }
 
 async function drawRSI(){
