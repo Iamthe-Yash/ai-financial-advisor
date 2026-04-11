@@ -67,6 +67,11 @@ def get_history(sym: str, period: str = "1y") -> pd.DataFrame:
         df = yf.download(ticker_sym, period=period, auto_adjust=True, progress=False)
         if df.empty:
             return pd.DataFrame()
+        # Flatten MultiIndex columns (yfinance >= 0.2.38 returns them)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        # Remove duplicate columns if any
+        df = df.loc[:, ~df.columns.duplicated()]
         df.index = pd.to_datetime(df.index)
         df = df.dropna()
         with _lock:

@@ -2571,6 +2571,41 @@ function _initScreenerFallback(){
 }
 
 // ═══════════════════════════════════════════════════
+//  AI CHAT WINDOW CONTROLS
+// ═══════════════════════════════════════════════════
+function toggleChat(){
+  const win = document.getElementById('chat-win');
+  if(!win) return;
+  const isOpen = win.classList.contains('open');
+  if(isOpen){
+    win.classList.remove('open','max');
+  } else {
+    win.classList.add('open');
+    // greet on first open
+    const msgs = document.getElementById('chat-msgs');
+    if(msgs && msgs.querySelectorAll('.msg-ai').length === 0){
+      msgs.innerHTML += `<div class="msg-ai">👋 Hi! I'm your AI Financial Assistant. Ask me anything about your portfolio, stocks, risk, or market trends.</div>`;
+    }
+    setTimeout(()=>{
+      const inp = document.getElementById('chat-inp');
+      if(inp) inp.focus();
+    }, 100);
+  }
+}
+
+function closeChat(){
+  const win = document.getElementById('chat-win');
+  if(win){ win.classList.remove('open','max'); }
+}
+
+function maximizeChat(){ const win=document.getElementById('chat-win'); if(win) win.classList.toggle('max'); }
+function maximiseChat(){ maximizeChat(); }
+function minimiseChat(){
+  const win = document.getElementById('chat-win');
+  if(win){ win.classList.remove('max'); win.classList.toggle('open'); }
+}
+
+// ═══════════════════════════════════════════════════
 //  AI CHAT  (calls backend /api/chat/send)
 // ═══════════════════════════════════════════════════
 async function getAIResp(msg){
