@@ -650,19 +650,19 @@ tr:hover td{background:var(--bg2);}
         <div class="divider">— or —</div>
       </div>
       <div id="auth-form-login">
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="yash@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="login-email" placeholder="Anonymous@example.com" autocomplete="email"/></div>
         <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/></div>
         <button class="btn-primary" onclick="doLogin()">Sign In Securely</button>
         <div class="login-footer" style="margin-top:10px;">JWT-secured · Google OAuth 2.0 · AES-256 encrypted</div>
       </div>
       <div id="auth-form-signup" style="display:none;">
-        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="signup-name" placeholder="Yash Sharma" autocomplete="name"/></div>
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="signup-email" placeholder="yash@example.com" autocomplete="email"/></div>
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="signup-name" placeholder="Anonymous" autocomplete="name"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="signup-email" placeholder="Anonymous@example.com" autocomplete="email"/></div>
         <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="signup-pass" placeholder="Minimum 6 characters" autocomplete="new-password"/></div>
         <button class="btn-primary" onclick="doSignup()">Create Account</button>
       </div>
       <div id="auth-form-forgot" style="display:none;">
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="yash@example.com"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="Anonymous@example.com"/></div>
         <button class="btn-primary" onclick="showToast('Password reset link sent to your email!','gr')">Send Reset Link</button>
       </div>
     </div>
@@ -794,7 +794,7 @@ tr:hover td{background:var(--bg2);}
       <div id="pane-dashboard" class="pane active">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
           <div>
-            <div style="font-size:19px;font-weight:700;" id="dash-greeting">Good morning, Yash</div>
+            <div style="font-size:19px;font-weight:700;" id="dash-greeting">Good morning, Anonymous</div>
             <div style="color:var(--tx3);font-size:11px;margin-top:3px;">Thursday · Apr 10, 2026 · NSE Open · <span class="up">All systems live</span></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -1026,12 +1026,12 @@ tr:hover td{background:var(--bg2);}
                 <div class="avatar-overlay">📷</div>
               </div>
               <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="uploadPhoto(this)"/>
-              <div style="font-size:15px;font-weight:700;" id="profile-name-disp">Yash Sharma</div>
-              <div style="color:var(--tx3);font-size:11px;" id="profile-email-disp">yash@example.com</div>
+              <div style="font-size:15px;font-weight:700;" id="profile-name-disp">Anonymous </div>
+              <div style="color:var(--tx3);font-size:11px;" id="profile-email-disp">Anonymous@example.com</div>
               <div style="margin-top:6px;"><span class="badge b-llm">Pro Member</span></div>
             </div>
-            <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="p-name" value="Yash Sharma"/></div>
-            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="p-email" value="yash@example.com" type="email"/></div>
+            <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="p-name" value="Anonymous "/></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="p-email" value="Anonymous@example.com" type="email"/></div>
             <div class="form-group"><label class="form-label">Bio / Trading Style</label><textarea id="p-bio" style="width:100%;height:72px;resize:none;" placeholder="e.g. Swing trader · Indian large-caps + BTC · 5 yrs experience"></textarea></div>
             <div class="form-group"><label class="form-label">Risk Appetite</label><select class="form-input" style="width:100%;"><option>Conservative</option><option selected>Moderate</option><option>Aggressive</option></select></div>
             <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
@@ -1138,7 +1138,7 @@ tr:hover td{background:var(--bg2);}
     </div>
   </div>
   <div id="chat-msgs">
-    <div class="msg-ai">Hello Yash! I'm your AI Financial Assistant — powered by Claude Sonnet 4.5 with GPT-4 and Gemini as fallback. I can analyse your portfolio, explain risk metrics, generate investment theses, run strategy comparisons, or answer any market question. What would you like to explore today?</div>
+    <div class="msg-ai">Hello Anonymous! I'm your AI Financial Assistant — powered by Claude Sonnet 4.5 with GPT-4 and Gemini as fallback. I can analyse your portfolio, explain risk metrics, generate investment theses, run strategy comparisons, or answer any market question. What would you like to explore today?</div>
   </div>
   <div class="chat-quick">
     <div class="cq" onclick="quickChat('Analyse my portfolio health')">Portfolio health</div>
