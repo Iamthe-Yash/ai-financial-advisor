@@ -7,18 +7,17 @@ import time, threading
 import numpy as np
 import pandas as pd
 import yfinance as yf
-import requests   # <-- NEW: required for custom session
+import requests
 
 _cache: dict = {}
 _lock  = threading.Lock()
 CACHE_TTL = 300   # seconds
 
-# ── custom requests session with proper User-Agent ─────────────────
+# ── custom requests session with proper User-Agent (no cache location override) ──
 _session = requests.Session()
 _session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 })
-yf.set_tz_cache_location(None)   # optional, prevents some warnings
 
 # ── symbol maps ────────────────────────────────────────────────
 SYMBOL_MAP = {
@@ -73,7 +72,7 @@ def get_history(sym: str, period: str = "1y", retries: int = 2) -> pd.DataFrame:
     ticker_sym = SYMBOL_MAP.get(sym, sym)
     for attempt in range(retries + 1):
         try:
-            # Use the custom session with the Ticker
+            # Use the custom session
             yf_ticker = yf.Ticker(ticker_sym, session=_session)
             df = yf_ticker.history(period=period, auto_adjust=True, progress=False)
             if df.empty:
