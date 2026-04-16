@@ -7,10 +7,18 @@ import time, threading
 import numpy as np
 import pandas as pd
 import yfinance as yf
+import requests   # <-- NEW: required for custom session
 
 _cache: dict = {}
 _lock  = threading.Lock()
 CACHE_TTL = 300   # seconds
+
+# ── custom requests session with proper User-Agent ─────────────────
+_session = requests.Session()
+_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+})
+yf.set_tz_cache_location(None)   # optional, prevents some warnings
 
 # ── symbol maps ────────────────────────────────────────────────
 SYMBOL_MAP = {
@@ -54,8 +62,8 @@ def _key(sym, period):
     return f"{sym}|{period}"
 
 
-def get_history(sym: str, period: str = "1y") -> pd.DataFrame:
-    """Return OHLCV DataFrame for a symbol, using cache."""
+def get_history(sym: str, period: str = "1y", retries: int = 2) -> pd.DataFrame:
+    """Return OHLCV DataFrame for a symbol, using cache and retries."""
     k = _key(sym, period)
     with _lock:
         entry = _cache.get(k)
@@ -63,23 +71,30 @@ def get_history(sym: str, period: str = "1y") -> pd.DataFrame:
             return entry["df"].copy()
 
     ticker_sym = SYMBOL_MAP.get(sym, sym)
-    try:
-        df = yf.download(ticker_sym, period=period, auto_adjust=True, progress=False)
-        if df.empty:
-            return pd.DataFrame()
-        # Flatten MultiIndex columns (yfinance >= 0.2.38 returns them)
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.get_level_values(0)
-        # Remove duplicate columns if any
-        df = df.loc[:, ~df.columns.duplicated()]
-        df.index = pd.to_datetime(df.index)
-        df = df.dropna()
-        with _lock:
-            _cache[k] = {"df": df, "ts": time.time()}
-        return df.copy()
-    except Exception as e:
-        print(f"[data] yfinance error for {sym}: {e}")
-        return pd.DataFrame()
+    for attempt in range(retries + 1):
+        try:
+            # Use the custom session with the Ticker
+            yf_ticker = yf.Ticker(ticker_sym, session=_session)
+            df = yf_ticker.history(period=period, auto_adjust=True, progress=False)
+            if df.empty:
+                return pd.DataFrame()
+            # Flatten MultiIndex columns (yfinance >= 0.2.38 returns them)
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            # Remove duplicate columns if any
+            df = df.loc[:, ~df.columns.duplicated()]
+            df.index = pd.to_datetime(df.index)
+            df = df.dropna()
+            with _lock:
+                _cache[k] = {"df": df, "ts": time.time()}
+            return df.copy()
+        except Exception as e:
+            print(f"[data] yfinance error for {sym} (attempt {attempt+1}/{retries+1}): {e}")
+            if attempt < retries:
+                time.sleep(1)
+            else:
+                return pd.DataFrame()
+    return pd.DataFrame()
 
 
 def get_quote(sym: str) -> dict:

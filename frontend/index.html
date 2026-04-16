@@ -233,7 +233,6 @@ tr:hover td{background:var(--bg2);}
 .tf-btn:hover,.tf-btn-r:hover{border-color:var(--gr);color:var(--gr);}
 .tf-active,.tf-r-active{background:var(--gr)!important;color:#000!important;border-color:var(--gr)!important;}
 </style>
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -1357,7 +1356,7 @@ async function drawMACD(sym){
   CH['c-macd']=new Chart(ctx,{type:'line',
     data:{labels,datasets:[
       {label:'MACD',data:macdVals,borderColor:'#3b82f6',tension:.4,pointRadius:0,borderWidth:1.5},
-      {label:'Signal',data:sigVals,borderColor:'#ef4444',tension:.4,pointRadius:0,borderWidth:1,borderDash:[4,4]},
+      {label:'Signal',data:sigVals,borderColor:'#ef4444',tension:.4,borderDash:[4,4],pointRadius:0,borderWidth:1},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#94a3b8',font:{size:8},boxWidth:8}}},
@@ -1881,30 +1880,15 @@ async function refreshAI(){
 }
 
 // ═══════════════════════════════════════════
-//  WEBSOCKET
+//  WEBSOCKET – DISABLED (Socket.IO not used)
 // ═══════════════════════════════════════════
-let _socket=null;
 function initWebSocket(){
-  const wsBase=(window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')?'http://localhost:5000':window.location.origin;
-  try{
-    _socket=io(wsBase,{transports:['websocket','polling'],reconnectionDelay:3000});
-    _socket.on('connect',()=>{
-      _socket.emit('subscribe_market',{symbols:['RELIANCE','TCS','HDFCBANK','BTC','NIFTY50','AAPL']});
-      _updateWsIndicator(true);
-    });
-    _socket.on('disconnect',()=>_updateWsIndicator(false));
-    _socket.on('price_update',data=>{if(data&&data.quotes)data.quotes.forEach(q=>_applyLivePriceUpdate(q));});
-    _socket.on('connect_error',()=>_updateWsIndicator(false));
-  }catch(e){console.warn('[WS] init failed:',e.message);}
-}
-function _applyLivePriceUpdate(q){
-  const stock=STOCKS.find(s=>s.sym===q.sym);if(stock){stock.p=q.price;stock.c=q.change;}
-  document.querySelectorAll(`[data-ws-sym="${q.sym}"]`).forEach(el=>{el.textContent=typeof q.price==='number'?q.price.toLocaleString('en-IN',{maximumFractionDigits:2}):q.price;});
-}
-function _updateWsIndicator(connected){
-  const dot=document.getElementById('ws-dot');const lbl=document.getElementById('ws-label');
-  if(dot)dot.style.background=connected?'var(--gr)':'var(--rd)';
-  if(lbl)lbl.textContent=connected?'LIVE':'POLLING';
+  // WebSocket disabled – frontend uses polling only
+  console.log('[WS] disabled – using REST polling');
+  const dot=document.getElementById('ws-dot');
+  const lbl=document.getElementById('ws-label');
+  if(dot)dot.style.background='var(--rd)';
+  if(lbl)lbl.textContent='POLLING';
 }
 
 // ═══════════════════════════════════════════
